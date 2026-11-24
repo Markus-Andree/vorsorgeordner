@@ -168,6 +168,13 @@ details.more summary{cursor:pointer;color:var(--acc);font-weight:600}
 @keyframes fall{to{transform:translateY(112vh) rotate(380deg)}}
 @media (prefers-reduced-motion:reduce){.iv-card,.iv-icon,.iv-halo,.iv-mic.on::before,.iv-mic.on::after,.petal,.iv-heard,.plant{animation:none!important}}
 
+.ptabs{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:0 0 1rem}
+.ptabs button{border-radius:22px;padding:.45rem 1rem}
+.ptabs button.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.ptabs.big button{font-size:1.05rem;padding:.65rem 1.2rem}
+.badge{display:inline-block;margin-left:.6rem;font-size:.75rem;font-weight:600;background:var(--acc2);color:var(--acc);border-radius:12px;padding:.1rem .55rem;vertical-align:middle}
+.iv-person{display:inline-block;background:var(--acc);border:2px solid var(--acc);color:#fff;border-radius:20px;padding:.2em .9em;font-size:.95em;font-weight:700;margin-bottom:.3em}
+
 #print{display:none}
 
 @media (max-width:820px){
@@ -208,7 +215,7 @@ details.more summary{cursor:pointer;color:var(--acc);font-weight:600}
    (PBKDF2-SHA-256, 600.000 Durchläufe).
    ============================================================ */
 
-const APP_VERSION = '0.2 (Testversion)';
+const APP_VERSION = '0.3 (Testversion)';
 const IS_WEB = location.protocol==='http:'||location.protocol==='https:';
 const APP_URL = IS_WEB ? location.origin+location.pathname.replace(/index\.html$/,'') : null;
 const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
@@ -268,6 +275,11 @@ const SCHEMA=[
   G('organ','Organspende',['Erklärung vorhanden|s|ja, Organspendeausweis;ja, im Organspende-Register;nein;nein, ich widerspreche','Aufbewahrungsort']),
   G('vertrauen','Personen des Vertrauens',['Rolle|s|Hausarzt/Hausärztin;Facharzt/Fachärztin;Pfarrer/Pastor;Steuerberater/in;Rechtsanwalt/Rechtsanwältin;Notar/in;Nachbar/in;Sonstige','Name','Anschrift|a','Telefon','E-Mail'],{repeat:'Vertrauensperson'})
  ]},
+ {id:'gesundheit',icon:'❤️‍🩹',title:'Gesundheit und Pflege',intro:'Wichtige Angaben für Rettungsdienst, Ärzte und Krankenhaus und Ihre Wünsche, falls Sie krank oder pflegebedürftig werden.',groups:[
+  G('medizin','Medizinische Angaben',['Medikamente (Name, Dosis)|a','Allergien und Unverträglichkeiten|a','Vorerkrankungen und Diagnosen|a','Blutgruppe','Implantate (z. B. Herzschrittmacher, künstliches Gelenk)|a','Hilfsmittel (z. B. Brille, Hörgerät, Zahnprothese, Rollator)|a','Pflegegrad|s|keiner;1;2;3;4;5','Wo liegen Medikamentenplan, Impfpass und Arztberichte?|a']),
+  G('aerzte','Ärzte und Therapeuten',['Fachrichtung|t|||z. B. Kardiologie, Augenarzt, Physiotherapie','Name','Telefon','Adresse|a'],{repeat:'Arzt'}),
+  G('pflege','Wünsche bei Krankheit und Pflege',['Wenn ich pflegebedürftig werde, möchte ich|s|möglichst zu Hause gepflegt werden;in eine Pflegeeinrichtung;das sollen meine Angehörigen entscheiden','Wünsche zur Pflege|a|||z. B. bestimmte Einrichtung, wer pflegen soll, was mir wichtig ist','Im Krankenhaus ist mir wichtig|a|||z. B. Besuch, Seelsorge, Brille und Hörgerät mitbringen','Wer kümmert sich um Wohnung, Post und Haustiere?|a'])
+ ]},
  {id:'beruf',icon:'🏛️',title:'Beruf und Versorgung',intro:'Angaben zu Pension, Beihilfe und Krankenversicherung. Wichtig für Sterbegeld und Witwen- bzw. Witwergeld.',groups:[
   G('dienst','Dienst und Pension',['Status|s|Pensionär/in;Beamter/Beamtin;Angestellte/r;Rentner/in|Pensionär/in','Letzte Dienststelle|a','Amtsbezeichnung','Im Ruhestand seit|d','Versorgungsstelle|t||Landesamt für Besoldung und Versorgung NRW (LBV), Düsseldorf','Personalnummer beim LBV','Kontakt Versorgungsstelle (Telefon / Portal)|a','Aufbewahrungsort Ernennungs- und Ruhestandsurkunde, Versorgungsbescheid']),
   G('beihilfe','Beihilfe und Krankenversicherung',['Beihilfestelle|t||LBV NRW, Beihilfe','Beihilfenummer','Private Krankenversicherung (Restkosten)','Versicherungsnummer Krankenversicherung','Pflegeversicherung','Aufbewahrungsort Bescheide']),
@@ -275,7 +287,7 @@ const SCHEMA=[
   G('verband','Berufsverband',['Name|t||vlbs','Mitgliedsnummer','Leistungen im Todesfall|a','Kontakt|a'],{repeat:'Verband'})
  ]},
  {id:'finanzen',icon:'🏦',title:'Konten und Finanzen',intro:'Alle Konten, Geldanlagen und regelmäßigen Zahlungen, damit nichts übersehen wird.',groups:[
-  G('giro','Girokonten',['Bank','Kontoinhaber|s|ich allein;gemeinsam mit Ehepartner/in;Sonstige','IBAN','BIC','Kundenberater/in, Telefon','Karten|t|||z. B. Girocard, Kreditkarte','Bevollmächtigte (über den Tod hinaus?)|a','Online-Banking|s|ja;nein',AUFB],{repeat:'Konto'}),
+  G('giro','Girokonten',['Bank','Kontoinhaber|s|@owner','IBAN','BIC','Kundenberater/in, Telefon','Karten|t|||z. B. Girocard, Kreditkarte','Bevollmächtigte (über den Tod hinaus?)|a','Online-Banking|s|ja;nein',AUFB],{repeat:'Konto'}),
   G('eingang','Regelmäßige Eingänge',['Was|t|||z. B. Pension, Rente, Miete','Betrag','Auf Konto','Hinweis'],{repeat:'Eingang'}),
   G('ausgang','Daueraufträge und Lastschriften',['Empfänger','Wofür','Betrag und Rhythmus','Von Konto','Im Todesfall|s|kündigen;auf Ehepartner/in umschreiben;weiterlaufen lassen;prüfen'],{repeat:'Zahlung'}),
   G('spar','Sparverträge und Wertpapiere',['Art|s|Sparbuch;Tagesgeld;Festgeld;Bausparvertrag;Depot / Wertpapiere;Kryptowährung;Sonstiges','Institut','Konto- / Depotnummer','Begünstigte/r','Laufzeit bis|d',AUFB],{repeat:'Anlage'}),
@@ -283,7 +295,7 @@ const SCHEMA=[
   G('kredit','Kredite, Bürgschaften, Leasing',['Art|s|Kredit;Bürgschaft;Leasing;Grundschuld','Gläubiger','Vertragsnummer','Summe','Tilgung bis|d','Restschuldversicherung|s|ja;nein;weiß nicht',AUFB],{repeat:'Vertrag'})
  ]},
  {id:'versicherung',icon:'🛡️',title:'Versicherungen',intro:'Lebens-, Sterbegeld- und Unfallversicherungen müssen oft sehr schnell gemeldet werden. Andere werden gekündigt oder umgeschrieben.',groups:[
-  G('vers','Versicherungen',['Art|s|Lebensversicherung;Sterbegeldversicherung;Unfallversicherung;Private Krankenversicherung;Pflegezusatzversicherung;Privathaftpflicht;Hausrat;Wohngebäude;Kfz;Rechtsschutz;Diensthaftpflicht;Reise;Sonstige','Gesellschaft','Versicherungsnummer','Kontakt (Telefon / Vermittler)','Bezugsberechtigte Person','Im Todesfall|s|sofort melden (Auszahlung);kündigen;auf Ehepartner/in umschreiben;läuft weiter','Aufbewahrungsort Police'],{repeat:'Versicherung'})
+  G('vers','Versicherungen',['Art|s|Lebensversicherung;Sterbegeldversicherung;Unfallversicherung;Private Krankenversicherung;Pflegezusatzversicherung;Privathaftpflicht;Hausrat;Wohngebäude;Kfz;Rechtsschutz;Diensthaftpflicht;Reise;Sonstige','Versicherte Person|s|@who','Gesellschaft','Versicherungsnummer','Kontakt (Telefon / Vermittler)','Bezugsberechtigte Person','Im Todesfall|s|sofort melden (Auszahlung);kündigen;auf Ehepartner/in umschreiben;läuft weiter','Aufbewahrungsort Police'],{repeat:'Versicherung'})
  ]},
  {id:'vertraege',icon:'📄',title:'Wohnen, Verträge und Abos',intro:'Laufende Verträge, die gekündigt oder umgeschrieben werden müssen.',groups:[
   G('wohnen','Wohnen',['Wohnsituation|s|Eigentum;Miete;Wohnrecht;Sonstiges','Vermieter / Hausverwaltung','Kontakt|a','Aufbewahrungsort Miet- bzw. Kaufvertrag']),
@@ -312,8 +324,32 @@ const SCHEMA=[
 ];
 const SEC=Object.fromEntries(SCHEMA.map(s=>[s.id,s]));
 
+/* ---------- Personen: persönliche und gemeinsame Angaben ----------
+   Person „a“ und alle gemeinsamen Gruppen liegen in data.s,
+   persönliche Gruppen von Person „b“ in data.pb.                      */
+const PER=new Set(['person.eigene','person.partner','person.eltern','person.geschwister','person.vereine','vorsorge.*','gesundheit.*','beruf.*','digital.*','todesfall.nachlass','todesfall.bestattung','todesfall.worte']);
+function isPer(sec,grp){return PER.has(sec+'.'+grp)||PER.has(sec+'.*');}
+function secHasPer(sec){return SEC[sec].groups.some(g=>isPer(sec,g.id));}
+function grpDef(sec,grp){return SEC[sec].groups.find(g=>g.id===grp);}
+function persons(){return(S.data&&S.data.persons)||[{id:'a',name:S.name||''}];}
+function isCouple(){return persons().length>1;}
+function pn(pid){const p=persons().find(x=>x.id===pid)||persons()[0];return(p.name||'').trim().split(/[ ,]+/)[0]||(pid==='b'?'Person 2':'Person 1');}
+function getG(sec,grp,pid){
+  pid=pid||S.pid||'a';
+  const base=(isPer(sec,grp)&&pid!=='a')?(S.data.pb=S.data.pb||{}):S.data.s;
+  base[sec]=base[sec]||{};
+  if(base[sec][grp]==null)base[sec][grp]=grpDef(sec,grp).repeat?[]:{};
+  return base[sec][grp];
+}
+function optsOf(f){
+  if(!f.opts)return null;
+  if(f.opts[0]==='@owner')return isCouple()?[pn('a')+' allein',pn('b')+' allein','beide gemeinsam','Sonstige']:['ich allein','gemeinsam mit Ehepartner/in','Sonstige'];
+  if(f.opts[0]==='@who')return isCouple()?[pn('a'),pn('b'),'beide']:null;
+  return f.opts;
+}
+
 /* ---------- Checkliste „Im Ernstfall“ (NRW, Pensionär/in) ---------- */
-function D(sec,grp){const s=S.data.s[sec]||{};return s[grp]||(SEC[sec].groups.find(g=>g.id===grp).repeat?[]:{});}
+function D(sec,grp){return getG(sec,grp,S.pid);}
 function v(obj,label){return (obj&&obj[slug(label)])||'';}
 function lines(arr){return arr.filter(Boolean).join('\n');}
 const CHECK=[
@@ -355,6 +391,34 @@ const CHECK=[
  ]}
 ];
 
+/* ---------- Checkliste „Krankheit oder Unfall“ ---------- */
+const hausarztTxt=()=>lines(D('vorsorge','vertrauen').filter(p=>/Haus/.test(v(p,'Rolle'))).map(p=>'Hausarzt: '+v(p,'Name')+' '+v(p,'Telefon')));
+const docTxt=(grp,label)=>{const d=D('vorsorge',grp);if(!v(d,'Vorhanden'))return '';return label+': '+v(d,'Vorhanden')+(v(d,'Bevollmächtigte Person(en)')?' – bevollmächtigt: '+v(d,'Bevollmächtigte Person(en)'):'')+(v(d,'Aufbewahrungsort des Originals')?' – liegt: '+v(d,'Aufbewahrungsort des Originals'):'');};
+const CHECK_KRANK=[
+ {id:'k1',title:'Sofort',when:'bei Unfall oder plötzlicher Erkrankung',items:[
+  {id:'notruf',t:'Bei Lebensgefahr sofort 112 rufen',d:'Sonst Hausarzt oder ärztlichen Bereitschaftsdienst 116 117 anrufen.',ref:'vorsorge',show:hausarztTxt},
+  {id:'infos',t:'Medizinische Angaben an Rettungsdienst und Ärzte geben',d:'Medikamente, Allergien und Vorerkrankungen sind für die Behandlung oft entscheidend.',ref:'gesundheit',show:()=>{const m=D('gesundheit','medizin');return lines([v(m,'Medikamente (Name, Dosis)')&&'Medikamente: '+v(m,'Medikamente (Name, Dosis)'),v(m,'Allergien und Unverträglichkeiten')&&'Allergien: '+v(m,'Allergien und Unverträglichkeiten'),v(m,'Vorerkrankungen und Diagnosen')&&'Erkrankungen: '+v(m,'Vorerkrankungen und Diagnosen'),v(m,'Implantate (z. B. Herzschrittmacher, künstliches Gelenk)')&&'Implantate: '+v(m,'Implantate (z. B. Herzschrittmacher, künstliches Gelenk)'),v(m,'Blutgruppe')&&'Blutgruppe: '+v(m,'Blutgruppe')]);}},
+  {id:'tasche',t:'Für das Krankenhaus einpacken',d:'Krankenversicherungskarte, Personalausweis, Medikamentenplan, Brille, Hörgerät, Zahnprothese und Kopien von Vorsorgevollmacht und Patientenverfügung.',ref:'gesundheit',show:()=>{const m=D('gesundheit','medizin'),e=D('person','eigene');return lines([v(e,'Aufbewahrungsort Personalausweis / Reisepass')&&'Ausweis: '+v(e,'Aufbewahrungsort Personalausweis / Reisepass'),v(m,'Wo liegen Medikamentenplan, Impfpass und Arztberichte?')&&'Medikamentenplan: '+v(m,'Wo liegen Medikamentenplan, Impfpass und Arztberichte?'),v(m,'Hilfsmittel (z. B. Brille, Hörgerät, Zahnprothese, Rollator)')&&'Hilfsmittel: '+v(m,'Hilfsmittel (z. B. Brille, Hörgerät, Zahnprothese, Rollator)')]);}}
+ ]},
+ {id:'k2',title:'Im Krankenhaus',when:'in den ersten Tagen',items:[
+  {id:'vollmacht',t:'Vorsorgevollmacht und Patientenverfügung vorlegen',d:'Dann wissen die Ärzte, wer entscheiden darf und welche Behandlung gewünscht ist. Ohne Vollmacht darf ein Ehepartner im Notfall nur Gesundheitsfragen entscheiden, höchstens sechs Monate lang (Ehegatten-Notvertretung, der Arzt bestätigt das schriftlich). Kinder dürfen ohne Vollmacht nicht entscheiden.',ref:'vorsorge',show:()=>lines([docTxt('vorsorgevollmacht','Vorsorgevollmacht'),docTxt('patient','Patientenverfügung'),docTxt('general','Generalvollmacht')])},
+  {id:'schweige',t:'Schweigepflichtentbindung zeigen',d:'Damit Ärzte den Angehörigen Auskunft geben dürfen.',ref:'vorsorge',show:()=>docTxt('schweige','Schweigepflichtentbindung')},
+  {id:'aerzte',t:'Hausarzt und behandelnde Ärzte informieren',ref:'gesundheit',show:()=>lines([hausarztTxt(),...D('gesundheit','aerzte').map(a=>v(a,'Fachrichtung')+': '+v(a,'Name')+' '+v(a,'Telefon'))])},
+  {id:'wunsch',t:'Wünsche für den Krankenhausaufenthalt beachten',ref:'gesundheit',show:()=>v(D('gesundheit','pflege'),'Im Krankenhaus ist mir wichtig')}
+ ]},
+ {id:'k3',title:'Zu Hause regeln',when:'in der ersten Woche',items:[
+  {id:'wohnung',t:'Wohnung, Post und Haustiere versorgen',ref:'gesundheit',show:()=>lines([v(D('gesundheit','pflege'),'Wer kümmert sich um Wohnung, Post und Haustiere?'),...D('todesfall','tiere').map(t=>v(t,'Name und Tierart')+' → '+v(t,'Soll versorgt werden von')),docTxt('post','Postvollmacht')])},
+  {id:'termine',t:'Termine absagen',d:'Arzttermine, Friseur, Verein, Essen auf Rädern und Ähnliches.'},
+  {id:'geld',t:'Laufende Zahlungen im Blick behalten',d:'Miete, Rechnungen und Daueraufträge laufen weiter. Mit einer Bankvollmacht kann eine Vertrauensperson Überweisungen erledigen.',ref:'vorsorge',show:()=>docTxt('bank','Bankvollmacht')}
+ ]},
+ {id:'k4',title:'Wenn es länger dauert',when:'nach einigen Wochen',items:[
+  {id:'sozial',t:'Sozialdienst des Krankenhauses ansprechen',d:'Er hilft bei Reha, Pflege zu Hause, Hilfsmitteln und Anträgen.'},
+  {id:'pflegegrad',t:'Pflegegrad beantragen',d:'Bei der Pflegekasse (sie gehört zur Krankenkasse bzw. privaten Pflegeversicherung). Beihilfeberechtigte informieren zusätzlich die Beihilfestelle.',ref:'beruf',show:()=>{const e=D('person','eigene'),b=D('beruf','beihilfe'),m=D('gesundheit','medizin');return lines([v(m,'Pflegegrad')&&'Pflegegrad bisher: '+v(m,'Pflegegrad'),v(e,'Krankenkasse')&&'Krankenkasse: '+v(e,'Krankenkasse'),v(b,'Private Krankenversicherung (Restkosten)')&&'Private Krankenversicherung: '+v(b,'Private Krankenversicherung (Restkosten)'),v(b,'Pflegeversicherung')&&'Pflegeversicherung: '+v(b,'Pflegeversicherung'),v(b,'Beihilfestelle')&&'Beihilfe: '+v(b,'Beihilfestelle')]);}},
+  {id:'pflegewunsch',t:'Wünsche zur Pflege umsetzen',ref:'gesundheit',show:()=>{const p=D('gesundheit','pflege');return lines([v(p,'Wenn ich pflegebedürftig werde, möchte ich'),v(p,'Wünsche zur Pflege')]);}},
+  {id:'betreuung',t:'Keine Vorsorgevollmacht? Dann hilft das Betreuungsgericht',d:'Ohne Vollmacht bestellt das Betreuungsgericht (Amtsgericht) einen rechtlichen Betreuer. Eine Betreuungsverfügung zeigt, wen sich die Person als Betreuer wünscht.',ref:'vorsorge',show:()=>docTxt('betreuung','Betreuungsverfügung')}
+ ]}
+];
+
 /* ---------- Speicher & Verschlüsselung ---------- */
 const enc=new TextEncoder(),dec=new TextDecoder();
 const b64=buf=>btoa(String.fromCharCode(...new Uint8Array(buf)));
@@ -383,13 +447,22 @@ const S={id:null,name:'',key:null,salt:null,data:null,view:'home',lastAct:Date.n
 let saveTimer=null,uid=0;
 
 function newData(opt={}){
-  const s={};
-  for(const sec of SCHEMA){s[sec.id]={};for(const g of sec.groups){
-    if(g.repeat)s[sec.id][g.id]=[];
-    else{const o={};if(opt.nrw)for(const f of g.fields)if(f.def)o[f.k]=f.def;s[sec.id][g.id]=o;}
-  }}
-  if(opt.nrw)s.beruf.verband=[{name:'vlbs'}];
-  return{v:1,s,check:{},iv:{pos:null,ans:{}},meta:{mode:opt.mode||'einfach',created:new Date().toISOString(),updated:new Date().toISOString()}};
+  const names=opt.names||[];
+  const mk=personalOnly=>{
+    const s={};
+    for(const sec of SCHEMA){s[sec.id]={};for(const g of sec.groups){
+      if(personalOnly&&!isPer(sec.id,g.id))continue;
+      if(g.repeat)s[sec.id][g.id]=[];
+      else{const o={};if(opt.nrw)for(const f of g.fields)if(f.def)o[f.k]=f.def;s[sec.id][g.id]=o;}
+    }}
+    if(opt.nrw)s.beruf.verband=[{name:'vlbs'}];
+    return s;
+  };
+  const s=mk(false);
+  const d={v:1,s,check:{},iv:{pos:null,ans:{}},persons:[{id:'a',name:names[0]||''}],meta:{mode:opt.mode||'einfach',created:new Date().toISOString(),updated:new Date().toISOString()}};
+  if(names[0])s.person.eigene.name_vorname=names[0];
+  if(names[1]){d.persons.push({id:'b',name:names[1]});d.pb=mk(true);d.pb.person.eigene.name_vorname=names[1];}
+  return d;
 }
 function lockMinutes(){return S.data&&S.data.meta.mode==='einfach'?30:AUTO_LOCK_MIN;}
 function openStart(){try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}if(S.data.meta.mode==='einfach')renderInterview();else renderApp();}
@@ -416,7 +489,7 @@ const WHY=[
  {icon:'🤍',title:'Für den Fall der Fälle',text:['Niemand denkt gern daran.','Aber irgendwann kommt der Tag, an dem Ihre Familie ohne Sie zurechtkommen muss. Manchmal ganz plötzlich.']},
  {icon:'💬',title:'Warum es diese App gibt',quote:true,text:['Zweimal in meinem Leben stand ich plötzlich vor einem Berg von Fragen: vor 30 Jahren, als mein Vater unerwartet starb, und vor zwei Jahren bei meinem Bruder.','Neben der Trauer kam die mühsame Suche: Welche Konten gibt es? Welche Versicherungen? Was muss gekündigt werden? Niemand wusste es.','Ich wünsche keiner Familie, das so erleben zu müssen. Mit ein paar Antworten von Ihnen bleibt es Ihren Liebsten erspart.']},
  {icon:'❓',title:'Dann stehen Ihre Angehörigen vor vielen Fragen',list:['Wo liegen die wichtigen Unterlagen?','Bei welchen Banken gibt es Konten?','Welche Versicherungen und Verträge laufen?','Wen müssen wir benachrichtigen?','Was hätte Mama oder Papa sich gewünscht?'],text:['Oft suchen sie wochenlang nach Antworten. Mitten in der Trauer.']},
- {icon:'🏥',title:'Auch zu Lebzeiten wichtig',text:['Nach einem Unfall oder bei schwerer Krankheit können Sie vielleicht nicht mehr selbst sprechen.','Dann wissen Ihre Liebsten: Wer darf für Sie entscheiden? Welcher Arzt kennt Sie? Wo liegen Ihre Vollmachten?']},
+ {icon:'🏥',title:'Auch zu Lebzeiten wichtig',pre:['Nach einem Unfall, einem Schlaganfall oder bei schwerer Krankheit können Sie vielleicht nicht mehr selbst sprechen. Dann müssen andere Fragen beantworten:'],list:['Wer darf für mich entscheiden?','Welche Behandlung wünsche ich, und welche nicht?','Welche Medikamente nehme ich, was vertrage ich nicht?','Wer kümmert sich um Wohnung, Post und Haustiere?'],text:['Gut zu wissen: Ohne Vorsorgevollmacht darf auch Ihr Ehepartner nur in Gesundheitsfragen und höchstens sechs Monate für Sie entscheiden, Ihre Kinder gar nicht. Sonst bestimmt das Gericht einen Betreuer.','Dieser Ordner hilft Ihnen, das rechtzeitig zu regeln.']},
  {icon:'🕊️',title:'Ihre Wünsche zählen',text:['Wie möchten Sie bestattet werden? Welches Lied soll gespielt werden? Wer soll es erfahren?','Wenn Sie es festhalten, müssen Ihre Angehörigen nicht raten. Und es wird so, wie Sie es sich wünschen.']},
  {icon:'🎁',title:'Ein Geschenk an Ihre Familie',text:['Mit diesem Ordner nehmen Sie Ihren Liebsten eine schwere Last ab.','Wer einmal einen Todesfall in der Familie erlebt hat, sagt oft: „Hätten wir doch nur so einen Ordner gehabt.“']},
  {icon:'🌱',title:'Ganz in Ihrem Tempo',text:['Ich stelle Ihnen einfache Fragen und lese sie Ihnen vor. Sie antworten mit Sprechen oder Tippen.','Nichts ist Pflicht. Sie können jederzeit eine Pause machen.','Ihre Angaben bleiben verschlüsselt auf Ihrem Gerät. Nur wer das Passwort kennt, kann sie lesen.'],cta:'Jetzt beginnen ▶'}
@@ -424,7 +497,7 @@ const WHY=[
 function renderWhy(done,onCta){
   done=done||renderCreate;
   let i=0,auto=false;
-  const spoken=s=>s.title+'. '+(s.list?s.list.join(' '):'')+' '+s.text.join(' ');
+  const spoken=s=>s.title+'. '+(s.pre?s.pre.join(' ')+' ':'')+(s.list?s.list.join(' '):'')+' '+s.text.join(' ');
   const show=()=>{
     shush();
     const s=WHY[i],last=i===WHY.length-1;
@@ -438,6 +511,7 @@ function renderWhy(done,onCta){
     add(card,
       h('div',{style:'text-align:center'},h('div',{class:'iv-halo'},h('div',{class:'iv-icon','aria-hidden':'true'},s.icon))),
       h('div',{class:'iv-q',style:'text-align:center'},s.title),
+      (s.pre||[]).map(t=>h('p',{class:'why-p'},t)),
       s.list&&h('ul',{class:'why-list'},s.list.map((t,k)=>h('li',{style:'animation-delay:'+(0.25+k*0.35).toFixed(2)+'s'},t))),
       s.text.map((t,k)=>h('p',{class:'why-p',style:s.list?'animation-delay:'+(0.25+s.list.length*0.35).toFixed(2)+'s':''},t)),
       h('div',{class:'iv-small',style:'justify-content:center'},h('button',{onclick:()=>{auto=true;say(spoken(s),true);}},'🔊 Vorlesen')),
@@ -526,6 +600,12 @@ function renderUnlock(o){
 function renderCreate(){
   root.innerHTML='';
   const name=h('input',{type:'text',id:'nm',placeholder:'z. B. Maria Musterfrau'});
+  const name2=h('input',{type:'text',id:'nm2',placeholder:'z. B. Hans Mustermann'});
+  const wSolo=h('input',{type:'radio',name:'who',id:'ws',checked:true,style:'width:auto;margin-right:.5rem'});
+  const wPaar=h('input',{type:'radio',name:'who',id:'wp2',style:'width:auto;margin-right:.5rem'});
+  const box2=h('div',{hidden:true},h('label',{for:'nm2'},'Wie heißt Ihr Partner bzw. Ihre Partnerin?'),name2);
+  const syncWho=()=>{box2.hidden=!wPaar.checked;const l=document.getElementById('pl1');if(l)l.textContent=wPaar.checked?'3. Ihr gemeinsames Passwort':'3. Ihr Passwort';};
+  wSolo.onchange=syncWho;wPaar.onchange=syncWho;
   const p1=h('input',{type:'password',id:'p1',autocomplete:'new-password'});
   const p2=h('input',{type:'password',id:'p2',autocomplete:'new-password'});
   const ok=h('input',{type:'checkbox',id:'ok',style:'width:auto;margin-right:.5rem'});
@@ -536,6 +616,7 @@ function renderCreate(){
   const btn=h('button',{class:'primary big',onclick:async()=>{
     err.innerHTML='';const e=m=>err.append(h('div',{class:'errbox'},m));
     if(!name.value.trim())return e('Bitte Ihren Namen eingeben.');
+    if(wPaar.checked&&!name2.value.trim())return e('Bitte auch den Namen Ihres Partners bzw. Ihrer Partnerin eingeben.');
     if(p1.value.length<10)return e('Das Passwort ist zu kurz. Es braucht mindestens 10 Zeichen. Tipp: drei Wörter, z. B. „Rosen Garten Sommer“.');
     if(p1.value!==p2.value)return e('Die beiden Passwörter stimmen nicht überein.');
     if(!ok.checked)return e('Bitte den Hinweis zum Passwort bestätigen.');
@@ -543,8 +624,10 @@ function renderCreate(){
     btn.disabled=true;btn.textContent='Wird angelegt …';
     try{
       const salt=rnd(16);const key=await deriveKey(p1.value,salt);
-      Object.assign(S,{id:'o'+Date.now().toString(36)+b64(rnd(4)).replace(/\W/g,''),name:name.value.trim(),key,salt,data:newData({nrw:nrw.checked,mode:mVoll.checked?'voll':'einfach'}),view:'home',lastAct:Date.now()});
-      await persist();openStart();
+      const n1=name.value.trim(),n2=wPaar.checked?name2.value.trim():'';
+      const oname=n2?n1.split(/[ ,]+/)[0]+' & '+n2.split(/[ ,]+/)[0]:n1;
+      Object.assign(S,{id:'o'+Date.now().toString(36)+b64(rnd(4)).replace(/\W/g,''),name:oname,key,salt,data:newData({nrw:nrw.checked,mode:mVoll.checked?'voll':'einfach',names:n2?[n1,n2]:[n1]}),view:'home',lastAct:Date.now()});
+      migrate();await persist();openStart();
     }catch(x){S.key=null;btn.disabled=false;btn.textContent='Ordner anlegen';e('Anlegen fehlgeschlagen: '+x.message);}
   }},'Ordner anlegen');
   const lbl={style:'color:var(--ink);display:flex;align-items:flex-start;gap:.2rem;margin:.4rem 0'};
@@ -552,25 +635,31 @@ function renderCreate(){
     h('button',{class:'link',onclick:()=>{shush();renderStart(' ');}},'← zurück'),
     h('h1',null,'Ihren Vorsorgeordner anlegen'),
     h('div',{class:'card stack'},
-      h('div',null,h('label',{for:'nm'},'1. Wie heißen Sie?'),name),
+      h('div',null,h('label',null,'1. Für wen ist der Ordner?'),
+        h('label',{for:'ws',...lbl},wSolo,h('span',null,'Nur für mich')),
+        h('label',{for:'wp2',...lbl},wPaar,h('span',null,'Für uns beide, als Paar. Persönliches wird für jeden getrennt erfasst, Gemeinsames nur einmal.'))),
+      h('div',null,h('label',{for:'nm'},'2. Wie heißen Sie?'),name),
+      box2,
       h('p',{style:'margin:.4rem 0 0'},'Damit niemand Fremdes Ihre Angaben lesen kann, schützen Sie den Ordner mit einem Passwort.'),
       h('div',{class:'hint'},'Tipp: Nehmen Sie drei Wörter, die Sie sich gut merken können, zum Beispiel „Rosen Garten Sommer“. Mindestens 10 Zeichen.'),
-      h('div',null,h('label',{for:'p1'},'2. Ihr Passwort'),p1),
-      h('div',null,h('label',{for:'p2'},'3. Passwort noch einmal'),p2),
+      h('div',null,h('label',{for:'p1',id:'pl1'},'3. Ihr Passwort'),p1),
+      h('div',null,h('label',{for:'p2'},'4. Passwort noch einmal'),p2),
       h('div',{class:'warnbox'},h('b',null,'Wichtig: '),'Ohne dieses Passwort kann niemand den Ordner öffnen, auch kein Techniker. Schreiben Sie es auf einen Zettel und legen Sie ihn in einen verschlossenen Umschlag, den Ihre Angehörigen im Ernstfall finden.'),
       h('label',{for:'ok',...lbl},ok,'Verstanden, ich bewahre das Passwort sicher auf.'),
       h('details',{class:'more'},h('summary',null,'Weitere Einstellungen'),
         h('div',{class:'stack',style:'margin-top:.6rem'},
           h('label',{for:'me',...lbl},mEinfach,h('span',null,h('b',null,'Einfache Ansicht: '),'eine Frage nach der anderen, mit Vorlesen und Sprechen (empfohlen).')),
           h('label',{for:'mv',...lbl},mVoll,h('span',null,h('b',null,'Ausführliche Ansicht: '),'alle Bereiche und Felder auf einen Blick.')),
-          h('label',{for:'nrw',...lbl},nrw,h('span',null,'Vorgaben für Lehrkräfte im Ruhestand in NRW eintragen (LBV NRW, vlbs)')))),
+          h('label',{for:'nrw',...lbl},nrw,h('span',null,'Vorgaben für Lehrkräfte im Ruhestand in NRW eintragen (LBV NRW, vlbs; bei Paaren für beide)')))),
       err,btn)
   ));
   name.focus();
   say('Jetzt legen wir Ihren Ordner an. Bitte tragen Sie Ihren Namen ein und wählen Sie ein Passwort.');
 }
 function migrate(){
-  const d=S.data;d.check=d.check||{};
+  const d=S.data;d.check=d.check||{};d.iv=d.iv||{pos:null,ans:{}};
+  if(!d.persons)d.persons=[{id:'a',name:S.name}];
+  S.pid='a';S.ernst=null;
   for(const sec of SCHEMA){d.s[sec.id]=d.s[sec.id]||{};for(const g of sec.groups){if(d.s[sec.id][g.id]==null)d.s[sec.id][g.id]=g.repeat?[]:{};}}
 }
 
@@ -578,11 +667,14 @@ function migrate(){
 function progress(sec){
   let total=0,filled=0,entries=0;
   for(const g of sec.groups){
-    const val=S.data.s[sec.id][g.id];
-    if(g.repeat){entries+=val.length;total+=1;if(val.length)filled+=1;}
-    else for(const f of g.fields){total++;if(val[f.k]&&val[f.k]!==f.def)filled++;else if(val[f.k]&&f.def)filled++;}
+    const pids=isPer(sec.id,g.id)?persons().map(p=>p.id):['a'];
+    for(const pid of pids){
+      const val=getG(sec.id,g.id,pid);
+      if(g.repeat){entries+=val.length;total+=1;if(val.length)filled+=1;}
+      else for(const f of g.fields){if(f.type==='s'&&!optsOf(f))continue;total++;if(val[f.k])filled++;}
+    }
   }
-  return{pct:Math.round(filled/total*100),entries};
+  return{pct:total?Math.round(filled/total*100):0,entries};
 }
 function go(view){S.view=view;renderApp();window.scrollTo(0,0);}
 function renderApp(){
@@ -630,7 +722,7 @@ function viewHome(m){
 function fieldEl(f,obj,after){
   const id='f'+(++uid);const val=obj[f.k]??'';let inp;
   if(f.type==='a'){inp=h('textarea',{id});inp.value=val;}
-  else if(f.type==='s'){inp=h('select',{id},h('option',{value:''},'– bitte wählen –'),f.opts.map(o=>h('option',{value:o},o)));if(val&&!f.opts.includes(val))inp.append(h('option',{value:val},val));inp.value=val;}
+  else if(f.type==='s'){const opts=optsOf(f);if(!opts)return null;inp=h('select',{id},h('option',{value:''},'– bitte wählen –'),opts.map(o=>h('option',{value:o},o)));if(val&&!opts.includes(val))inp.append(h('option',{value:val},val));inp.value=val;}
   else if(f.type==='d'&&(!val||/^\d{4}-\d{2}-\d{2}$/.test(val))){inp=h('input',{id,type:'date'});inp.value=val;}
   else if(f.type==='p'){inp=h('input',{id,type:'password',autocomplete:'off'});inp.value=val;}
   else{inp=h('input',{id,type:'text'});inp.value=val;}
@@ -644,12 +736,13 @@ function entryTitle(g,e){const vals=g.fields.map(f=>e[f.k]).filter(x=>x&&typeof 
 function viewSection(m,sec){
   m.append(h('h1',null,sec.icon+' '+sec.title),h('p',{class:'muted'},sec.intro));
   if(sec.warn)m.append(h('div',{class:'warnbox'},sec.warn));
+  if(isCouple()&&secHasPer(sec.id))m.append(personTabs('Persönliche Angaben von:'));
   for(const g of sec.groups){
-    const card=h('section',{class:'card'},h('h2',null,g.title));
+    const gp=isPer(sec.id,g.id);
+    const card=h('section',{class:'card'},h('h2',null,g.title+(isCouple()&&gp?' – '+pn(S.pid):''),isCouple()&&!gp&&h('span',{class:'badge'},'👫 gemeinsam')));
     if(g.note)card.append(h('div',{class:'note small'},g.note));
-    const store_=S.data.s[sec.id];
     if(g.repeat){
-      const list=store_[g.id];
+      const list=getG(sec.id,g.id);
       const box=h('div');
       const draw=(openIdx)=>{
         box.innerHTML='';
@@ -666,13 +759,14 @@ function viewSection(m,sec){
       draw();
       card.append(box,h('button',{onclick:()=>{list.push({});touch();draw(list.length-1);const ds=box.querySelectorAll('details');const last=ds[ds.length-1];last&&last.querySelector('input,select,textarea').focus();}},'➕ '+g.repeat+' hinzufügen'));
     }else{
-      card.append(h('div',{class:'grid'},g.fields.map(f=>fieldEl(f,store_[g.id]))));
+      const obj=getG(sec.id,g.id);
+      card.append(h('div',{class:'grid'},g.fields.map(f=>fieldEl(f,obj))));
     }
     m.append(card);
   }
   if(sec.id==='notfall'){
     m.append(h('section',{class:'card'},h('h2',null,'Notfallblatt'),
-      h('p',null,'Das Notfallblatt erklärt Ihren Angehörigen auf einer Seite, wo der Ordner ist und wie man ihn öffnet. Ausdrucken, das Passwort von Hand eintragen und in einen verschlossenen Umschlag stecken. Am besten zwei Exemplare: eins für Ihre Frau, eins für Ihren Sohn.'),
+      h('p',null,'Das Notfallblatt erklärt Ihren Angehörigen auf einer Seite, wo der Ordner ist und wie man ihn öffnet. Ausdrucken, das Passwort von Hand eintragen und in einen verschlossenen Umschlag stecken. Am besten ein Exemplar für jede Person, die Zugriff haben soll.'),
       h('button',{class:'primary',onclick:printSheet},'🖨 Notfallblatt drucken')));
   }
   const i=SCHEMA.indexOf(sec);
@@ -681,15 +775,27 @@ function viewSection(m,sec){
     i<SCHEMA.length-1?h('button',{class:'primary',onclick:()=>go('sec:'+SCHEMA[i+1].id)},SCHEMA[i+1].title+' →'):h('span')));
 }
 
+function personTabs(label){
+  return h('div',{class:'ptabs'},h('span',{class:'muted small'},label),persons().map(p=>h('button',{class:S.pid===p.id?'on':'',onclick:()=>{S.pid=p.id;renderApp();}},'👤 '+pn(p.id))));
+}
 function viewCheck(m){
-  const done=Object.values(S.data.check).filter(Boolean).length,total=CHECK.reduce((a,p)=>a+p.items.length,0);
+  S.ernst=S.ernst||'krank';
+  const krank=S.ernst==='krank',list=krank?CHECK_KRANK:CHECK;
+  const pre=(krank?'k:':'')+(S.pid!=='a'?S.pid+':':'');
+  const keys=list.flatMap(p=>p.items.map(it=>pre+p.id+'.'+it.id));
+  const done=keys.filter(k=>S.data.check[k]).length;
+  const who=pn(S.pid);
   add(m,h('h1',null,'⚠️ Im Ernstfall: Was ist zu tun?'),
-    h('div',{class:'note'},'Diese Liste führt Schritt für Schritt durch die ersten Wochen. Erledigtes können Sie abhaken. ',h('b',null,done+' von '+total+' erledigt.')),
-    h('p',{class:'small muted'},'Allgemeine Hinweise für Nordrhein-Westfalen und Pensionäre, Stand November 2026, ohne Gewähr. Sie ersetzen keine Rechtsberatung. Im Zweifel helfen der Bestatter, das Amtsgericht (Nachlassgericht), ein Notar oder das LBV.'));
-  for(const ph of CHECK){
+    h('div',{class:'ptabs big'},
+      h('button',{class:krank?'on':'',onclick:()=>{S.ernst='krank';renderApp();}},'🏥 Krankheit oder Unfall'),
+      h('button',{class:!krank?'on':'',onclick:()=>{S.ernst='tod';renderApp();}},'🕊️ Todesfall')),
+    isCouple()&&personTabs('Wen betrifft es?'),
+    h('div',{class:'note'},(krank?'Was zu tun ist, wenn '+who+' plötzlich ins Krankenhaus muss oder nicht mehr selbst entscheiden kann.':'Diese Liste führt Schritt für Schritt durch die ersten Wochen nach dem Tod von '+who+'.')+' Unter den Punkten stehen die passenden Angaben. Erledigtes können Sie abhaken. ',h('b',null,done+' von '+keys.length+' erledigt.')),
+    h('p',{class:'small muted'},krank?'Allgemeine Hinweise, Stand November 2026, ohne Gewähr. Sie ersetzen keine ärztliche oder rechtliche Beratung.':'Allgemeine Hinweise für Nordrhein-Westfalen und Pensionäre, Stand November 2026, ohne Gewähr. Sie ersetzen keine Rechtsberatung. Im Zweifel helfen der Bestatter, das Amtsgericht (Nachlassgericht), ein Notar oder das LBV.'));
+  for(const ph of list){
     const sec=h('section',{class:'phase'},h('h2',null,ph.title,h('span',{class:'when'},ph.when)));
     for(const it of ph.items){
-      const key=ph.id+'.'+it.id;
+      const key=pre+ph.id+'.'+it.id;
       const cb=h('input',{type:'checkbox','aria-label':it.t});cb.checked=!!S.data.check[key];
       let data='';try{data=it.show?it.show():'';}catch(e){data='';}
       const row=h('div',{class:'item'+(cb.checked?' done':'')},cb,h('div',null,
@@ -701,7 +807,7 @@ function viewCheck(m){
     }
     m.append(sec);
   }
-  m.append(h('button',{class:'danger',onclick:()=>{if(confirm('Alle Haken zurücksetzen?')){S.data.check={};touch();renderApp();}}},'Haken zurücksetzen'));
+  m.append(h('button',{class:'danger',onclick:()=>{if(confirm('Alle Haken dieser Liste zurücksetzen?')){keys.forEach(k=>delete S.data.check[k]);touch();renderApp();}}},'Haken zurücksetzen'));
 }
 
 /* ---------- Sicherung, Import, Passwort ---------- */
@@ -766,6 +872,15 @@ function viewBackup(m){
         S.salt=rnd(16);S.key=await deriveKey(np1.value,S.salt);await persist();
         store.upsertIndex({id:S.id,lastBackup:null});
         alert('Das Passwort wurde geändert.\n\nBitte jetzt:\n1. Den Zettel im Notfall-Umschlag erneuern.\n2. Eine neue Sicherungsdatei speichern. Alte Sicherungen lassen sich nur noch mit dem alten Passwort öffnen.');renderApp();}},'Passwort ändern'))),
+    !isCouple()&&(()=>{const pn2=h('input',{type:'text',placeholder:'z. B. Erika Musterfrau'});return h('section',{class:'card stack'},h('h2',null,'👫 Partner oder Partnerin hinzufügen'),
+      h('p',null,'Dann wird dies ein gemeinsamer Ordner für Sie beide, mit einem Passwort. Persönliches wie Vollmachten, Gesundheit und Wünsche wird für jeden getrennt erfasst, Gemeinsames wie Kinder, Wohnung, Konten und Verträge nur einmal.'),
+      h('div',null,h('label',null,'Name des Partners bzw. der Partnerin'),pn2),
+      h('div',null,h('button',{class:'primary',onclick:()=>{const n=pn2.value.trim();if(!n)return alert('Bitte einen Namen eingeben.');
+        S.data.persons=[{id:'a',name:S.data.persons[0].name||S.name},{id:'b',name:n}];
+        getG('person','eigene','b')[slug('Name, Vorname')]=n;
+        if(!S.data.persons[0].name)S.data.persons[0].name=S.name;
+        S.name=pn('a')+' & '+pn('b');touch();
+        alert('Fertig! „'+S.name+'“ ist jetzt ein gemeinsamer Ordner. Persönliche Bereiche haben oben einen Umschalter für beide Personen.');renderApp();}},'Hinzufügen')));})(),
     h('section',{class:'card stack'},h('h2',null,'Ordner von diesem Gerät löschen'),
       h('p',{class:'small'},'Entfernt den Ordner aus diesem Browser. Sicherungsdateien bleiben davon unberührt.'),
       h('div',null,h('button',{class:'danger',onclick:async()=>{const t=prompt('Zum Bestätigen bitte den Namen des Ordners eingeben: '+S.name);if(t!==S.name)return;
@@ -862,8 +977,8 @@ const IV=[
  {id:'fam',t:['person','eigene','Familienstand'],q:'Sind Sie verheiratet, verwitwet, geschieden oder ledig?'},
  {id:'kk',t:['person','eigene','Krankenkasse'],q:'Bei welcher Krankenkasse sind Sie versichert?'},
  {intro:true,ch:'Ihre Familie',icon:'👨‍👩‍👧',text:'Jetzt geht es um Ihre Familie.'},
- {id:'partner',t:['person','partner','Name, Vorname'],q:'Wie heißt Ihr Ehepartner oder Ihre Partnerin?',help:'Auch wenn Ihr Partner schon verstorben ist, können Sie den Namen nennen.'},
- {id:'partnertod',t:['person','partner','Ggf. Sterbedatum'],q:'Wann ist Ihr Partner verstorben?',help:'Zum Beispiel: 12. Mai 1995',cond:()=>ivVal('person','eigene','Familienstand')==='verwitwet'},
+ {id:'partner',t:['person','partner','Name, Vorname'],q:'Wie heißt Ihr Ehepartner oder Ihre Partnerin?',help:'Auch wenn Ihr Partner schon verstorben ist, können Sie den Namen nennen.',cond:()=>!isCouple()},
+ {id:'partnertod',t:['person','partner','Ggf. Sterbedatum'],q:'Wann ist Ihr Partner verstorben?',help:'Zum Beispiel: 12. Mai 1995',cond:pid=>!isCouple()&&ivVal('person','eigene','Familienstand',pid)==='verwitwet'},
  {id:'kinder',rep:['person','kinder'],who:'Ihr Kind',whoD:'Ihrem Kind',ask:'Haben Sie Kinder?',item:'Kind',more:'Möchten Sie noch ein Kind eintragen?',fields:[['Name, Vorname','Wie heißt Ihr Kind?'],['Telefon','Wie lautet die Telefonnummer von {nameD}?'],['Adresse','Wo wohnt {name}?']]},
  {intro:true,ch:'Wichtige Menschen',icon:'🤝',text:'Jetzt geht es darum, wen Ihre Angehörigen im Ernstfall anrufen sollen.'},
  {id:'benach',rep:['todesfall','benach'],ask:'Gibt es Menschen, die sofort benachrichtigt werden sollen?',help:'Zum Beispiel Geschwister, gute Freunde oder Nachbarn.',item:'Person',more:'Möchten Sie noch jemanden eintragen?',preset:{wann:'sofort'},fields:[['Name','Wie heißt die Person?'],['Beziehung','Wer ist {name} für Sie?','Zum Beispiel: Schwester, Nachbarin, Freund'],['Telefon','Wie lautet die Telefonnummer von {nameD}?']]},
@@ -871,24 +986,39 @@ const IV=[
  {id:'arzttel',where:['vorsorge','vertrauen',{rolle:'Hausarzt/Hausärztin'}],field:'Telefon',q:'Wie lautet die Telefonnummer der Arztpraxis?'},
  {intro:true,ch:'Papiere und Vollmachten',icon:'📜',text:'Jetzt geht es um wichtige Papiere: Vollmachten, Testament und Urkunden.'},
  {id:'vv',t:['vorsorge','vorsorgevollmacht','Vorhanden'],choices:JNW,q:'Haben Sie eine Vorsorgevollmacht?',help:'Damit darf eine Vertrauensperson für Sie entscheiden, wenn Sie es selbst nicht mehr können.'},
- {id:'vvwer',t:['vorsorge','vorsorgevollmacht','Bevollmächtigte Person(en)'],q:'Wer ist in der Vorsorgevollmacht bevollmächtigt?',cond:()=>ivVal('vorsorge','vorsorgevollmacht','Vorhanden')==='ja'},
- {id:'vvwo',t:['vorsorge','vorsorgevollmacht','Aufbewahrungsort des Originals'],q:'Wo liegt die Vorsorgevollmacht?',cond:()=>ivVal('vorsorge','vorsorgevollmacht','Vorhanden')==='ja'},
- {id:'pv',t:['vorsorge','patient','Vorhanden'],choices:JNW,q:'Haben Sie eine Patientenverfügung?',help:'Darin steht, welche Behandlung Sie am Lebensende wünschen oder ablehnen.'},
- {id:'pvwo',t:['vorsorge','patient','Aufbewahrungsort des Originals'],q:'Wo liegt die Patientenverfügung?',cond:()=>ivVal('vorsorge','patient','Vorhanden')==='ja'},
+ {id:'vvwer',t:['vorsorge','vorsorgevollmacht','Bevollmächtigte Person(en)'],q:'Wer darf laut Vorsorgevollmacht für Sie entscheiden?',cond:pid=>ivVal('vorsorge','vorsorgevollmacht','Vorhanden',pid)==='ja'},
+ {id:'vvwo',t:['vorsorge','vorsorgevollmacht','Aufbewahrungsort des Originals'],q:'Wo liegt die Vorsorgevollmacht?',cond:pid=>ivVal('vorsorge','vorsorgevollmacht','Vorhanden',pid)==='ja'},
+ {id:'vvtipp',info:true,per:true,icon:'💡',q:'Gut zu wissen',text:'Ohne Vorsorgevollmacht darf niemand automatisch alles für Sie regeln, auch Ihre Kinder nicht. Ehepartner dürfen im Notfall nur Gesundheitsfragen entscheiden, und das höchstens sechs Monate lang. Für alles andere, etwa Bank, Wohnung und Behörden, bestimmt dann das Gericht einen Betreuer. Ein Formular für die Vorsorgevollmacht gibt es kostenlos beim Bundesjustizministerium, in vielen Rathäusern oder beim Notar.',cond:pid=>ivVal('vorsorge','vorsorgevollmacht','Vorhanden',pid)!=='ja'},
+ {id:'pv',t:['vorsorge','patient','Vorhanden'],choices:JNW,q:'Haben Sie eine Patientenverfügung?',help:'Darin steht, welche Behandlung Sie wünschen oder ablehnen, wenn Sie sich selbst nicht mehr äußern können.'},
+ {id:'pvwo',t:['vorsorge','patient','Aufbewahrungsort des Originals'],q:'Wo liegt die Patientenverfügung?',cond:pid=>ivVal('vorsorge','patient','Vorhanden',pid)==='ja'},
+ {id:'btv',t:['vorsorge','betreuung','Vorhanden'],choices:JNW,q:'Haben Sie eine Betreuungsverfügung?',help:'Darin steht, wen das Gericht als Betreuer einsetzen soll, falls einmal einer nötig wird.'},
+ {id:'schw',t:['vorsorge','schweige','Vorhanden'],choices:JNW,q:'Dürfen Ihre Ärzte Ihren Angehörigen Auskunft geben?',help:'Dafür gibt es die Entbindung von der ärztlichen Schweigepflicht.'},
  {id:'bv',t:['vorsorge','bank','Vorhanden'],choices:JNW,q:'Hat jemand eine Vollmacht für Ihr Bankkonto?'},
- {id:'bvwer',t:['vorsorge','bank','Bevollmächtigte Person(en)'],q:'Wer hat die Vollmacht für Ihr Bankkonto?',cond:()=>ivVal('vorsorge','bank','Vorhanden')==='ja'},
+ {id:'bvwer',t:['vorsorge','bank','Bevollmächtigte Person(en)'],q:'Wer hat die Vollmacht für Ihr Bankkonto?',cond:pid=>ivVal('vorsorge','bank','Vorhanden',pid)==='ja'},
  {id:'test',t:['todesfall','nachlass','Testament'],q:'Haben Sie ein Testament gemacht?',extra:[['','Weiß ich nicht']]},
- {id:'testwo',t:['todesfall','nachlass','Aufbewahrungsort Testament / beim Amtsgericht hinterlegt'],q:'Wo liegt Ihr Testament?',help:'Zum Beispiel: im Schreibtisch oder beim Amtsgericht hinterlegt.',cond:()=>{const x=ivVal('todesfall','nachlass','Testament');return !!x&&!x.startsWith('kein');}},
+ {id:'testwo',t:['todesfall','nachlass','Aufbewahrungsort Testament / beim Amtsgericht hinterlegt'],q:'Wo liegt Ihr Testament?',help:'Zum Beispiel: im Schreibtisch oder beim Amtsgericht hinterlegt.',cond:pid=>{const x=ivVal('todesfall','nachlass','Testament',pid);return !!x&&!x.startsWith('kein');}},
  {id:'ausweis',t:['person','eigene','Aufbewahrungsort Personalausweis / Reisepass'],q:'Wo liegt Ihr Personalausweis?'},
  {id:'urk',t:['person','eigene','Aufbewahrungsort Familienstammbuch / Heiratsurkunde'],q:'Wo liegen Ihr Familienstammbuch und Ihre Urkunden?',help:'Zum Beispiel Geburtsurkunde und Heiratsurkunde.'},
+ {intro:true,ch:'Gesundheit und Pflege',icon:'❤️‍🩹',text:'Diese Angaben helfen Ärzten und Ihren Angehörigen, wenn Sie plötzlich krank werden oder einen Unfall haben.'},
+ {id:'med',t:['gesundheit','medizin','Medikamente (Name, Dosis)'],q:'Welche Medikamente nehmen Sie regelmäßig?',help:'Name und wie oft. Sie können auch sagen, wo Ihr Medikamentenplan liegt.'},
+ {id:'allerg',t:['gesundheit','medizin','Allergien und Unverträglichkeiten'],q:'Haben Sie Allergien, oder vertragen Sie etwas nicht?',help:'Zum Beispiel Penicillin, Pflaster oder bestimmte Lebensmittel.'},
+ {id:'krank',t:['gesundheit','medizin','Vorerkrankungen und Diagnosen'],q:'Welche wichtigen Erkrankungen haben oder hatten Sie?',help:'Zum Beispiel Diabetes, Herzinfarkt oder Schlaganfall.'},
+ {id:'hilfs',t:['gesundheit','medizin','Hilfsmittel (z. B. Brille, Hörgerät, Zahnprothese, Rollator)'],q:'Brauchen Sie Hilfsmittel?',help:'Zum Beispiel Brille, Hörgerät, Zahnprothese oder Rollator.'},
+ {id:'medplan',t:['gesundheit','medizin','Wo liegen Medikamentenplan, Impfpass und Arztberichte?'],q:'Wo liegen Ihr Medikamentenplan und Ihre Arztberichte?'},
+ {id:'pflwo',t:['gesundheit','pflege','Wenn ich pflegebedürftig werde, möchte ich'],q:'Wenn Sie einmal Pflege brauchen: Was wünschen Sie sich?'},
+ {id:'pflwunsch',t:['gesundheit','pflege','Wünsche zur Pflege'],q:'Was ist Ihnen bei der Pflege wichtig?',help:'Zum Beispiel wer Sie pflegen soll oder eine bestimmte Einrichtung.'},
+ {id:'krhaus',t:['gesundheit','pflege','Im Krankenhaus ist mir wichtig'],q:'Was ist Ihnen wichtig, wenn Sie ins Krankenhaus müssen?',help:'Zum Beispiel Besuch, Seelsorge, oder dass Brille und Hörgerät mitkommen.'},
+ {id:'versorg',t:['gesundheit','pflege','Wer kümmert sich um Wohnung, Post und Haustiere?'],q:'Wer soll sich um Wohnung, Post und Haustiere kümmern, wenn Sie im Krankenhaus sind?'},
+ {id:'organ',t:['vorsorge','organ','Erklärung vorhanden'],q:'Haben Sie eine Entscheidung zur Organspende getroffen?',extra:[['','Weiß ich nicht']]},
  {intro:true,ch:'Geld und Versicherungen',icon:'🏦',text:'Jetzt geht es um Bank, Rente und Versicherungen. Kontonummern müssen Sie nicht auswendig wissen.'},
- {id:'giro',rep:['finanzen','giro'],ask:'Haben Sie ein Konto bei einer Bank oder Sparkasse?',item:'Konto',more:'Haben Sie noch ein Konto bei einer anderen Bank?',fields:[['Bank','Bei welcher Bank oder Sparkasse ist das Konto?'],['Aufbewahrungsort der Unterlagen','Wo liegen die Kontoauszüge und Unterlagen dazu?']]},
+ {id:'giro',rep:['finanzen','giro'],ask:'Haben Sie ein Konto bei einer Bank oder Sparkasse?',item:'Konto',more:'Haben Sie noch ein Konto bei einer anderen Bank?',fields:[['Bank','Bei welcher Bank oder Sparkasse ist das Konto?'],['Kontoinhaber','Wem gehört das Konto?',null,'couple'],['Aufbewahrungsort der Unterlagen','Wo liegen die Kontoauszüge und Unterlagen dazu?']]},
  {id:'rente',rep:['beruf','rente'],ask:'Bekommen Sie eine Rente oder Pension?',item:'Rente',more:'Bekommen Sie noch eine weitere Rente oder Pension?',fields:[['Träger','Von wem bekommen Sie das Geld?','Zum Beispiel: Deutsche Rentenversicherung, Witwenrente, Pension vom Land'],['Aufbewahrungsort der Unterlagen','Wo liegen die Bescheide dazu?']]},
- {id:'vers',rep:['versicherung','vers'],ask:'Haben Sie Versicherungen, zum Beispiel eine Sterbegeld- oder Lebensversicherung?',item:'Versicherung',more:'Haben Sie noch eine weitere Versicherung?',fields:[['Art','Was für eine Versicherung ist das?'],['Gesellschaft','Bei welcher Versicherungsgesellschaft?'],['Aufbewahrungsort Police','Wo liegen die Unterlagen dazu?']]},
+ {id:'vers',rep:['versicherung','vers'],ask:'Haben Sie Versicherungen, zum Beispiel eine Sterbegeld- oder Lebensversicherung?',item:'Versicherung',more:'Haben Sie noch eine weitere Versicherung?',fields:[['Art','Was für eine Versicherung ist das?'],['Versicherte Person','Für wen ist die Versicherung?',null,'couple'],['Gesellschaft','Bei welcher Versicherungsgesellschaft?'],['Aufbewahrungsort Police','Wo liegen die Unterlagen dazu?']]},
  {intro:true,ch:'Wohnen und Verträge',icon:'🏠',text:'Jetzt geht es um Ihre Wohnung und laufende Verträge.'},
  {id:'wohn',t:['vertraege','wohnen','Wohnsituation'],choices:[['Miete','Zur Miete'],['Eigentum','Im eigenen Haus oder in der eigenen Wohnung'],['Wohnrecht','Mit Wohnrecht'],['Sonstiges','Anders']],q:'Wie wohnen Sie?'},
  {id:'verm',t:['vertraege','wohnen','Vermieter / Hausverwaltung'],q:'Wer ist Ihr Vermieter oder Ihre Hausverwaltung?',cond:()=>ivVal('vertraege','wohnen','Wohnsituation')==='Miete'},
  {id:'vermk',t:['vertraege','wohnen','Kontakt'],q:'Wie erreicht man den Vermieter?',help:'Zum Beispiel Telefonnummer oder Adresse.',cond:()=>ivVal('vertraege','wohnen','Wohnsituation')==='Miete'},
+ {id:'tiere',rep:['todesfall','tiere'],ask:'Haben Sie Haustiere?',item:'Haustier',more:'Haben Sie noch ein Haustier?',fields:[['Name und Tierart','Wie heißt das Tier, und was für ein Tier ist es?'],['Soll versorgt werden von','Wer soll sich um das Tier kümmern, wenn Sie es nicht mehr können?']]},
  {id:'vertr',rep:['vertraege','vertrag'],ask:'Haben Sie laufende Verträge oder Abos, zum Beispiel Telefon, Zeitung oder Strom?',item:'Vertrag',more:'Haben Sie noch einen weiteren Vertrag?',fields:[['Art','Was für ein Vertrag ist das?'],['Anbieter','Bei welcher Firma?']]},
  {intro:true,ch:'Handy und Internet',icon:'📱',text:'Damit Ihre Angehörigen an Ihr Handy kommen, brauchen sie die PIN.'},
  {id:'pin',where:['digital','geraet',{geraet:'Handy'}],field:'Entsperr-PIN / Code',q:'Mit welcher PIN entsperren Sie Ihr Handy?',help:'Bitte tippen statt laut sagen. Die PIN wird verschlüsselt gespeichert.'},
@@ -908,30 +1038,50 @@ const IV=[
 
 /* ---------- Ablauf ---------- */
 function fdef(sec,grp,label){const g=SEC[sec].groups.find(x=>x.id===grp);const f=g&&g.fields.find(x=>x.label===label);if(!f)console.error('Feld fehlt:',sec,grp,label);return f;}
-function ivVal(sec,grp,label){const f=fdef(sec,grp,label);return(S.data.s[sec][grp]||{})[f.k]||'';}
-function repList(s){return S.data.s[s.rep[0]][s.rep[1]];}
-function whereEntry(s,create){const list=S.data.s[s.where[0]][s.where[1]];let e=list.find(x=>Object.entries(s.where[2]).every(([k,v])=>x[k]===v));if(!e&&create){e={...s.where[2]};list.push(e);}return e;}
+function ivVal(sec,grp,label,pid){const f=fdef(sec,grp,label);return getG(sec,grp,pid||'a')[f.k]||'';}
+function stepGrp(s){return s.t?[s.t[0],s.t[1]]:s.where?[s.where[0],s.where[1]]:s.rep?[s.rep[0],s.rep[1]]:null;}
+function stepPer(s){if(s.per!==undefined)return s.per;const g=stepGrp(s);return !!g&&isPer(g[0],g[1]);}
+function keyPre(s,pid){return isCouple()&&stepPer(s)?pid+'/':'';}
+function repList(s,pid){return getG(s.rep[0],s.rep[1],pid);}
+function whereEntry(s,create,pid){const list=getG(s.where[0],s.where[1],pid);let e=list.find(x=>Object.entries(s.where[2]).every(([k,v])=>x[k]===v));if(!e&&create){e={...s.where[2]};list.push(e);}return e;}
 function pageTarget(p){
-  const s=p.s;
-  if(p.entry!=null){const f=fdef(s.rep[0],s.rep[1],p.f[0]);return{f,get:()=>repList(s)[p.entry][f.k]||'',set:v=>{repList(s)[p.entry][f.k]=v;}};}
-  if(s.where){const f=fdef(s.where[0],s.where[1],s.field);return{f,get:()=>{const e=whereEntry(s);return e?e[f.k]||'':'';},set:v=>{whereEntry(s,true)[f.k]=v;}};}
-  const f=fdef(...s.t);const o=()=>S.data.s[s.t[0]][s.t[1]];
+  const s=p.s,pid=p.pid;
+  if(p.entry!=null){const f=fdef(s.rep[0],s.rep[1],p.f[0]);return{f,get:()=>repList(s,pid)[p.entry][f.k]||'',set:v=>{repList(s,pid)[p.entry][f.k]=v;}};}
+  if(s.where){const f=fdef(s.where[0],s.where[1],s.field);return{f,get:()=>{const e=whereEntry(s,false,pid);return e?e[f.k]||'':'';},set:v=>{whereEntry(s,true,pid)[f.k]=v;}};}
+  const f=fdef(...s.t);const o=()=>getG(s.t[0],s.t[1],pid);
   return{f,get:()=>o()[f.k]||'',set:v=>{o()[f.k]=v;}};
 }
 function ivPages(){
-  const out=[];let ch='',icon='';
-  for(const s of IV){
-    if(s.intro){ch=s.ch;icon=s.icon;out.push({key:'i:'+s.ch,type:'intro',ch,icon,s});continue;}
-    if(s.end){out.push({key:'end',type:'end',ch:'Geschafft',icon:'🌸',s});continue;}
-    if(s.cond&&!s.cond())continue;
+  const out=[],couple=isCouple(),ps=persons().map(p=>p.id);
+  const emit=(s,ch,icon,pid)=>{
+    const kp=keyPre(s,pid);
+    if(s.cond&&!s.cond(pid))return;
+    if(s.info){out.push({key:kp+s.id,type:'info',ch,icon,s,pid});return;}
     if(s.rep){
-      const list=repList(s);
-      if(!list.length)out.push({key:s.id+':ask',type:'ask',ch,icon,s});
-      list.forEach((e,i)=>s.fields.forEach((f,j)=>out.push({key:s.id+':'+i+':'+j,type:'field',ch,icon,s,entry:i,f})));
-      if(list.length)out.push({key:s.id+':more',type:'more',ch,icon,s});
-      continue;
+      const list=repList(s,pid);
+      if(!list.length)out.push({key:kp+s.id+':ask',type:'ask',ch,icon,s,pid});
+      list.forEach((e,i)=>s.fields.forEach((f,j)=>{if(f[3]==='couple'&&!couple)return;out.push({key:kp+s.id+':'+i+':'+j,type:'field',ch,icon,s,entry:i,f,pid});}));
+      if(list.length)out.push({key:kp+s.id+':more',type:'more',ch,icon,s,pid});
+      return;
     }
-    out.push({key:s.id,type:'field',ch,icon,s});
+    out.push({key:kp+s.id,type:'field',ch,icon,s,pid});
+  };
+  /* Kapitel bilden: bei Paaren erst die gemeinsamen Fragen, dann die persönlichen je Person */
+  const chaps=[];let c=null;
+  for(const s of IV){if(s.intro||s.end){c={head:s,steps:[]};chaps.push(c);}else c.steps.push(s);}
+  for(const c of chaps){
+    const s=c.head;
+    if(s.end){out.push({key:'end',type:'end',ch:'Geschafft',icon:'🌸',s});continue;}
+    out.push({key:'i:'+s.ch,type:'intro',ch:s.ch,icon:s.icon,s});
+    if(!couple){c.steps.forEach(st=>emit(st,s.ch,s.icon,'a'));continue;}
+    c.steps.filter(st=>!stepPer(st)).forEach(st=>emit(st,s.ch,s.icon,'a'));
+    const per=c.steps.filter(stepPer);
+    if(per.length)for(const pid of ps){
+      const n=out.length;
+      out.push({key:pid+'/p:'+s.ch,type:'person',ch:s.ch,icon:s.icon,s,pid});
+      per.forEach(st=>emit(st,s.ch,s.icon,pid));
+      if(out.length===n+1)out.pop();
+    }
   }
   return out;
 }
@@ -963,7 +1113,8 @@ function ivShow(pages,i){
   if(S.data.iv.pos!==p.key){S.data.iv.pos=p.key;touch();}
   const pct=Math.round(i/Math.max(1,pages.length-1)*100);
   const plant=pct>=100?'🌸':pct>=75?'🌳':pct>=50?'🪴':pct>=25?'🌿':'🌱';
-  const card=ivFrame(p.ch+(p.type==='intro'||p.type==='end'?'':' · Schritt '+(i+1)+' von '+pages.length),pct,plant);
+  const forP=isCouple()&&p.pid&&p.s&&stepPer(p.s);
+  const card=ivFrame(p.ch+(forP?' · '+pn(p.pid):'')+(p.type==='intro'||p.type==='end'||p.type==='person'?'':' · Schritt '+(i+1)+' von '+pages.length),pct,plant);
   const rel=d=>{const np=ivPages();const j=np.findIndex(x=>x.key===p.key);ivShow(np,(j<0?i:j)+d);};
   const goKey=k=>{const np=ivPages();const j=np.findIndex(x=>x.key===k);ivShow(np,j<0?i+1:j);};
   const next=()=>rel(1),back=()=>rel(-1);
@@ -983,8 +1134,20 @@ function ivShow(pages,i){
       navRow({nextLabel:i===0?'Los geht’s ▶':'Weiter ▶'})));
     say(text);return;
   }
+  if(p.type==='person'||p.type==='info'){
+    const nm=pn(p.pid);
+    const title=p.type==='person'?'Jetzt ist '+nm+' dran':p.s.q;
+    const text=p.type==='person'?'Die nächsten Fragen zum Thema „'+p.ch+'“ beantwortet '+nm+'. Bitte das Handy oder Tablet an '+nm+' weitergeben, oder gemeinsam weitermachen.':p.s.text;
+    add(card,h('div',{class:'iv-intro'},
+      forP&&p.type==='info'&&h('div',{class:'iv-person'},'👤 '+nm),
+      h('div',{class:'iv-halo'},h('div',{class:'iv-icon','aria-hidden':'true'},p.type==='person'?'👤':(p.s.icon||'💡'))),
+      h('div',{class:'iv-q'},title),h('p',{style:'text-align:left'},text),
+      h('div',{class:'iv-small',style:'justify-content:center'},sayBtn(title+'. '+text)),
+      navRow({})));
+    say(title+'. '+text);return;
+  }
   if(p.type==='end'){
-    const nm=ivVal('person','eigene','Name, Vorname').split(/[ ,]/)[0];
+    const nm=isCouple()?persons().map(x=>pn(x.id)).join(' und '):ivVal('person','eigene','Name, Vorname').split(/[ ,]/)[0];
     const text='Geschafft! Vielen Dank'+(nm?', '+nm:'')+'. Alle Antworten sind gespeichert. Bitten Sie jetzt eine Vertrauensperson, das Notfallblatt auszudrucken und eine Sicherung zu speichern. Sie können Ihre Antworten jederzeit ändern.';
     card.append(h('div',{class:'iv-intro'},
       h('div',{class:'iv-halo'},h('div',{class:'iv-icon','aria-hidden':'true'},'🌸')),
@@ -1001,19 +1164,19 @@ function ivShow(pages,i){
   }
 
   /* Frage-Seiten */
-  const s=p.s;let q,help,choices=null,tg=null,entryLabel='';
-  if(p.type==='ask'){q=s.ask;help=s.help;choices=[['ja','Ja'],['nein','Nein']];}
-  else if(p.type==='more'){q=s.more;const names=repList(s).map(e=>e[slug('Name, Vorname')]||e[slug('Name')]||e[slug('Bank')]||e[slug('Träger')]||e[slug('Gesellschaft')]||e[slug('Anbieter')]||e[slug('Art')]).filter(Boolean);help=names.length?'Bisher eingetragen: '+names.join(', '):'';choices=[['ja','Ja'],['nein','Nein, weiter']];}
+  const s=p.s,kp=keyPre(s,p.pid);let q,help,choices=null,tg=null,entryLabel='';
+  if(p.type==='ask'){q=s.ask;help=s.help||'';choices=[['ja','Ja'],['nein','Nein']];}
+  else if(p.type==='more'){q=s.more;const names=repList(s,p.pid).map(e=>e[slug('Name, Vorname')]||e[slug('Name')]||e[slug('Bank')]||e[slug('Träger')]||e[slug('Gesellschaft')]||e[slug('Anbieter')]||e[slug('Art')]).filter(Boolean);help=names.length?'Bisher eingetragen: '+names.join(', '):'';choices=[['ja','Ja'],['nein','Nein, weiter']];}
   else{
     tg=pageTarget(p);
     if(p.entry!=null){
-      const e=repList(s)[p.entry];const nm=e[slug('Name, Vorname')]||e[slug('Name')]||'';
+      const e=repList(s,p.pid)[p.entry];const nm=e[slug('Name, Vorname')]||e[slug('Name')]||'';
       q=p.f[1].replace('{nameD}',nm||s.whoD||'dieser Person').replace('{name}',nm||s.who||'diese Person');help=p.f[2]||'';entryLabel=s.item+' '+(p.entry+1);
     }else{q=s.q;help=s.help||'';}
-    if(tg.f.type==='s'||s.choices)choices=s.choices||[...tg.f.opts.map(o=>[o,cap(o)]),...(s.extra||[])];
+    if(tg.f.type==='s'||s.choices)choices=s.choices||[...(optsOf(tg.f)||[]).map(o=>[o,cap(o)]),...(s.extra||[])];
   }
-  const spoken=q+(help&&p.type!=='more'?' '+help:'');
-  add(card,entryLabel&&h('div',{class:'iv-chap'},entryLabel),h('div',{class:'iv-q'},q),help&&h('div',{class:'iv-help'},help));
+  const spoken=(forP?pn(p.pid)+', ':'')+q+(help&&p.type!=='more'?' '+help:'');
+  add(card,forP&&h('div',{class:'iv-person'},'👤 '+pn(p.pid)),entryLabel&&h('div',{class:'iv-chap'},entryLabel),h('div',{class:'iv-q'},q),help&&h('div',{class:'iv-help'},help));
   const info=h('div',{class:'iv-info',hidden:true});
   const showInfo=t=>{info.textContent=t;info.hidden=false;say(t);};
   const heard=h('div',{class:'iv-heard',hidden:true});
@@ -1030,19 +1193,19 @@ function ivShow(pages,i){
   };
 
   if(choices){
-    let cur=p.type==='ask'?(S.data.iv.ans[s.id]||''):p.type==='more'?'':tg.get();
+    let cur=p.type==='ask'?(S.data.iv.ans[kp+s.id]||''):p.type==='more'?'':tg.get();
     const btns=choices.map(([val,label])=>{
       const b=h('button',{class:(p.type==='field'&&cur===val&&(val||cur))||(p.type==='ask'&&cur&&cur===val)?'sel':''},label);
       b.onclick=()=>{
         btns.forEach(x=>x.classList.remove('sel'));b.classList.add('sel');
         if(p.type==='ask'){
-          S.data.iv.ans[s.id]=val;
-          if(val==='ja'){repList(s).push({...(s.preset||{})});touch();goKey(s.id+':0:0');}
+          S.data.iv.ans[kp+s.id]=val;
+          if(val==='ja'){repList(s,p.pid).push({...(s.preset||{})});touch();goKey(kp+s.id+':0:0');}
           else{touch();setTimeout(next,350);}
           return;
         }
         if(p.type==='more'){
-          if(val==='ja'){const l=repList(s);l.push({...(s.preset||{})});touch();goKey(s.id+':'+(l.length-1)+':0');}
+          if(val==='ja'){const l=repList(s,p.pid);l.push({...(s.preset||{})});touch();goKey(kp+s.id+':'+(l.length-1)+':0');}
           else next();
           return;
         }
@@ -1146,40 +1309,59 @@ function printAll(withPw){
   for(const sec of SCHEMA){
     const secEl=h('div',null,h('h2',null,sec.title));let any=false;
     for(const g of sec.groups){
-      const val=S.data.s[sec.id][g.id];
-      const rowsFor=o=>g.fields.filter(f=>o[f.k]).map(f=>h('tr',null,h('td',null,f.label),h('td',{style:'white-space:pre-line'},f.type==='p'&&!withPw?'•••• (in der App)':f.type==='d'?fmtDate(o[f.k]):o[f.k])));
-      if(g.repeat){val.forEach((e,i)=>{const r=rowsFor(e);if(r.length){any=true;secEl.append(h('section',null,h('h3',null,g.title+' – '+g.repeat+' '+(i+1)),h('table',null,r)));}});}
-      else{const r=rowsFor(val);if(r.length){any=true;secEl.append(h('section',null,h('h3',null,g.title),h('table',null,r)));}}
+      const pids=isPer(sec.id,g.id)?persons().map(p=>p.id):['a'];
+      for(const pid of pids){
+        const val=getG(sec.id,g.id,pid);
+        const suf=isCouple()&&isPer(sec.id,g.id)?' ('+pn(pid)+')':'';
+        const rowsFor=o=>g.fields.filter(f=>o[f.k]).map(f=>h('tr',null,h('td',null,f.label),h('td',{style:'white-space:pre-line'},f.type==='p'&&!withPw?'•••• (in der App)':f.type==='d'?fmtDate(o[f.k]):o[f.k])));
+        if(g.repeat){val.forEach((e,i)=>{const r=rowsFor(e);if(r.length){any=true;secEl.append(h('section',null,h('h3',null,g.title+suf+' – '+g.repeat+' '+(i+1)),h('table',null,r)));}});}
+        else{const r=rowsFor(val);if(r.length){any=true;secEl.append(h('section',null,h('h3',null,g.title+suf),h('table',null,r)));}}
+      }
     }
     if(any)wrap.append(secEl);
   }
   doPrint(wrap);
 }
 function printSheet(){
-  const n=S.data.s.notfall,ort=n.ort||{};
-  const zug=(n.zugriff||[]).filter(p=>p.name||p.beziehung);
-  const hausarzt=(S.data.s.vorsorge.vertrauen||[]).find(p=>/Haus/.test(p.rolle||''));
-  const best=S.data.s.todesfall.bestattung||{},dienst=S.data.s.beruf.dienst||{};
-  doPrint(h('div',null,
+  const ort=getG('notfall','ort');
+  const zug=getG('notfall','zugriff').filter(p=>p.name||p.beziehung);
+  const wir=isCouple();
+  const perPerson=fn=>persons().map(p=>{const old=S.pid;S.pid=p.id;let r;try{r=fn(p.id);}finally{S.pid=old;}return r;});
+  const kranke=perPerson(pid=>{
+    const m=getG('gesundheit','medizin',pid);
+    const rows=[docTxt('vorsorgevollmacht','Vorsorgevollmacht'),docTxt('patient','Patientenverfügung'),
+      v(m,'Allergien und Unverträglichkeiten')&&'Allergien: '+v(m,'Allergien und Unverträglichkeiten'),
+      v(m,'Wo liegen Medikamentenplan, Impfpass und Arztberichte?')&&'Medikamentenplan: '+v(m,'Wo liegen Medikamentenplan, Impfpass und Arztberichte?'),
+      hausarztTxt()].filter(Boolean);
+    return rows.length?h('div',null,wir&&h('h3',null,pn(pid)),h('ul',null,rows.map(r=>h('li',null,r)))):null;
+  });
+  const tod=perPerson(pid=>{
+    const b=getG('todesfall','bestattung',pid),d=getG('beruf','dienst',pid);
+    const rows=[v(b,'Bestattungsart')&&'Bestattungswunsch: '+v(b,'Bestattungsart')+(v(b,'Friedhof / Ort')?', '+v(b,'Friedhof / Ort'):''),
+      v(b,'Bestattungsinstitut')&&'Bestatter: '+v(b,'Bestattungsinstitut'),
+      v(d,'Versorgungsstelle')&&'Versorgungsstelle: '+v(d,'Versorgungsstelle')+(v(d,'Personalnummer beim LBV')?', Personalnr. '+v(d,'Personalnummer beim LBV'):'')].filter(Boolean);
+    return rows.length?h('div',null,wir&&h('h3',null,pn(pid)),h('ul',null,rows.map(r=>h('li',null,r)))):null;
+  });
+  doPrint(add(h('div',null),
     h('h1',null,'NOTFALLBLATT – Vorsorgeordner von '+S.name),
-    h('p',null,'Stand: '+fmtDate(new Date().toISOString())+'. Wenn mir etwas zustößt, finden Sie alle wichtigen Angaben in meinem digitalen Vorsorgeordner.'),
+    h('p',null,'Stand: '+fmtDate(new Date().toISOString())+'. Wenn '+(wir?'uns':'mir')+' etwas zustößt, finden Sie alle wichtigen Angaben in '+(wir?'unserem':'meinem')+' digitalen Vorsorgeordner.'),
     h('h2',null,'1. So öffnen Sie den Ordner'),
     h('ol',null,
       h('li',null,'Gerät: ',v(ort,'Auf welchem Gerät ist die App eingerichtet?')||'_______________________'),
-      h('li',null,'Dort die App „Vorsorgeordner“ öffnen: auf dem Handy oder Tablet das grüne Ordner-Symbol auf dem Startbildschirm antippen'+(APP_URL?', sonst im Internet-Browser die Adresse '+APP_URL+' aufrufen.':', am Computer die Datei „index.html“ im Ordner „Vorsorgeordner\\app“ per Doppelklick öffnen.')),
-      h('li',null,'Auf „'+S.name+'“ klicken und das Passwort eingeben.'),
-      h('li',null,'Links auf ',h('b',null,'„Im Ernstfall“'),' klicken. Dort steht Schritt für Schritt, was zu tun ist.')),
+      h('li',null,'Dort die App „Vorsorgeordner“ öffnen: auf dem Handy oder Tablet das grüne Ordner-Symbol auf dem Startbildschirm antippen'+(APP_URL?', sonst im Internet-Browser die Adresse '+APP_URL+' aufrufen.':', am Computer die Datei „index.html“ im Ordner „Vorsorgeordner\app“ per Doppelklick öffnen.')),
+      h('li',null,'Auf „'+S.name+'“ tippen und das Passwort eingeben.'),
+      h('li',null,'Auf ',h('b',null,'„Im Ernstfall“'),' tippen. Dort steht Schritt für Schritt, was bei Krankheit oder Unfall und was im Todesfall zu tun ist.')),
     h('p',null,'Falls das Gerät nicht funktioniert oder gesperrt ist: '+(APP_URL?'Auf einem anderen Handy oder Computer die Adresse '+APP_URL+' öffnen':'Die App auf einem anderen Computer öffnen')+', „Sicherungsdatei laden“ wählen und die Sicherungsdatei auswählen. Sie wurde zum Beispiel per E-Mail oder WhatsApp verschickt oder liegt auf einem USB-Stick.'),
     h('p',null,h('b',null,'Sicherungsdatei liegt: '),v(ort,'Wo liegt die Sicherungsdatei?')||'_______________________'),
     h('div',{class:'box'},h('b',null,'Passwort: '),v(ort,'Wo liegt das Passwort?')?'liegt '+v(ort,'Wo liegt das Passwort?'):'',h('div',{class:'line'}),h('div',{style:'font-size:9pt'},'(von Hand eintragen oder auf separatem Zettel im verschlossenen Umschlag)')),
     h('h2',null,'2. Zugriff haben'),
     zug.length?h('ul',null,zug.map(p=>h('li',null,(p.name||'_______________')+' ('+(p.beziehung||'')+')'+(p.telefon?', Tel. '+p.telefon:'')))):h('p',null,'_______________________'),
-    h('h2',null,'3. Die ersten Schritte'),
-    h('ol',null,
-      h('li',null,'Arzt für den Totenschein rufen'+(hausarzt?': '+hausarzt.name+' '+(hausarzt.telefon||''):' (Hausarzt oder 116 117)')+'.'),
-      h('li',null,'Bestatter beauftragen'+(best.bestattungsinstitut?': '+best.bestattungsinstitut:'')+(best.bestattungsart?'. Mein Wunsch: '+best.bestattungsart:'')+'.'),
-      h('li',null,'Lebens- und Sterbegeldversicherungen schnell melden (Angaben in der App unter „Versicherungen“).'),
-      h('li',null,'Versorgungsstelle informieren'+(dienst.versorgungsstelle?': '+dienst.versorgungsstelle:'')+(dienst.personalnummer_beim_lbv?', Personalnr. '+dienst.personalnummer_beim_lbv:'')+'.')),
+    h('h2',null,'3. Bei Krankheit oder Unfall'),
+    h('p',null,'Bei Lebensgefahr 112, sonst Hausarzt oder 116 117. Vorsorgevollmacht und Patientenverfügung ins Krankenhaus mitnehmen.'),
+    kranke,
+    h('h2',null,'4. Im Todesfall'),
+    h('p',null,'Arzt für den Totenschein rufen, Bestatter beauftragen, Lebens- und Sterbegeldversicherungen schnell melden (Angaben in der App unter „Versicherungen“).'),
+    tod,
     h('p',{style:'margin-top:20pt'},'Ort, Datum, Unterschrift: ____________________________________________')
   ));
 }
