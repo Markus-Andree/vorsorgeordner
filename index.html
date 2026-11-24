@@ -150,6 +150,19 @@ details.entry .body{padding:.2rem .9rem 1rem}
 .iv-set .opts{display:flex;gap:.5rem;flex-wrap:wrap}
 .iv-set .opts button.sel{background:var(--acc2);border-color:var(--acc);font-weight:700}
 body:has(.iv) .status{display:none}
+.dots{flex:1;display:flex;gap:.45rem;justify-content:center;align-items:center}
+.dots span{width:.7rem;height:.7rem;border-radius:1rem;background:#cfd8d2;transition:all .35s ease}
+.dots span.on{background:var(--acc);width:1.9rem}
+.dots span.done{background:#8fb8a1}
+.why .why-p{font-size:1.02em;line-height:1.55;margin:.7em 0;animation:ivIn .5s ease both}
+.why-list{list-style:none;padding:0;margin:.4em 0 .6em}
+.why-list li{background:#fff;border:2px solid var(--line);border-radius:14px;padding:.55em .8em;margin:.45em 0;animation:ivIn .5s ease both}
+.why-list li::before{content:"❔ "}
+.bigstart label{font-size:1rem}
+.bigstart .hint{font-size:.95rem}
+.bigstart h1{font-size:1.9rem}
+details.more summary{cursor:pointer;color:var(--acc);font-weight:600}
+@media (prefers-reduced-motion:reduce){.why .why-p,.why-list li{animation:none!important}}
 .petal{position:fixed;top:-50px;font-size:1.9rem;animation:fall linear forwards;pointer-events:none;z-index:50}
 @keyframes fall{to{transform:translateY(112vh) rotate(380deg)}}
 @media (prefers-reduced-motion:reduce){.iv-card,.iv-icon,.iv-halo,.iv-mic.on::before,.iv-mic.on::after,.petal,.iv-heard,.plant{animation:none!important}}
@@ -396,13 +409,54 @@ window.addEventListener('beforeunload',()=>{if(saveTimer){persist();}});
 
 /* ---------- Startbildschirm ---------- */
 const root=document.getElementById('root');
+/* ---------- Einführung: Warum ein Vorsorgeordner? ---------- */
+const WHY=[
+ {icon:'🤍',title:'Für den Fall der Fälle',text:['Niemand denkt gern daran.','Aber irgendwann kommt der Tag, an dem Ihre Familie ohne Sie zurechtkommen muss. Manchmal ganz plötzlich.']},
+ {icon:'❓',title:'Dann stehen Ihre Angehörigen vor vielen Fragen',list:['Wo liegen die wichtigen Unterlagen?','Bei welchen Banken gibt es Konten?','Welche Versicherungen und Verträge laufen?','Wen müssen wir benachrichtigen?','Was hätte Mama oder Papa sich gewünscht?'],text:['Oft suchen sie wochenlang nach Antworten. Mitten in der Trauer.']},
+ {icon:'🏥',title:'Auch zu Lebzeiten wichtig',text:['Nach einem Unfall oder bei schwerer Krankheit können Sie vielleicht nicht mehr selbst sprechen.','Dann wissen Ihre Liebsten: Wer darf für Sie entscheiden? Welcher Arzt kennt Sie? Wo liegen Ihre Vollmachten?']},
+ {icon:'🕊️',title:'Ihre Wünsche zählen',text:['Wie möchten Sie bestattet werden? Welches Lied soll gespielt werden? Wer soll es erfahren?','Wenn Sie es festhalten, müssen Ihre Angehörigen nicht raten. Und es wird so, wie Sie es sich wünschen.']},
+ {icon:'🎁',title:'Ein Geschenk an Ihre Familie',text:['Mit diesem Ordner nehmen Sie Ihren Liebsten eine schwere Last ab.','Wer einmal einen Todesfall in der Familie erlebt hat, sagt oft: „Hätten wir doch nur so einen Ordner gehabt.“']},
+ {icon:'🌱',title:'Ganz in Ihrem Tempo',text:['Ich stelle Ihnen einfache Fragen und lese sie Ihnen vor. Sie antworten mit Sprechen oder Tippen.','Nichts ist Pflicht. Sie können jederzeit eine Pause machen.','Ihre Angaben bleiben verschlüsselt auf Ihrem Gerät. Nur wer das Passwort kennt, kann sie lesen.'],cta:'Jetzt beginnen ▶'}
+];
+function renderWhy(done,onCta){
+  done=done||renderCreate;
+  let i=0,auto=false;
+  const spoken=s=>s.title+'. '+(s.list?s.list.join(' '):'')+' '+s.text.join(' ');
+  const show=()=>{
+    shush();
+    const s=WHY[i],last=i===WHY.length-1;
+    const card=h('div',{class:'iv-card why'});
+    root.innerHTML='';
+    root.append(h('div',{class:'iv',style:'--ivfs:'+prefs().size+'rem'},
+      h('div',{class:'iv-top'},
+        h('div',{class:'dots',role:'img','aria-label':'Seite '+(i+1)+' von '+WHY.length},WHY.map((_,k)=>h('span',{class:k===i?'on':k<i?'done':''}))),
+        h('button',{onclick:()=>{shush();done();}},last?'Schließen':'Überspringen')),
+      h('div',{class:'iv-main'},card)));
+    card.append(
+      h('div',{style:'text-align:center'},h('div',{class:'iv-halo'},h('div',{class:'iv-icon','aria-hidden':'true'},s.icon))),
+      h('div',{class:'iv-q',style:'text-align:center'},s.title),
+      s.list&&h('ul',{class:'why-list'},s.list.map((t,k)=>h('li',{style:'animation-delay:'+(0.25+k*0.35).toFixed(2)+'s'},t))),
+      s.text.map((t,k)=>h('p',{class:'why-p',style:s.list?'animation-delay:'+(0.25+s.list.length*0.35).toFixed(2)+'s':''},t)),
+      h('div',{class:'iv-small',style:'justify-content:center'},h('button',{onclick:()=>{auto=true;say(spoken(s),true);}},'🔊 Vorlesen')),
+      h('div',{class:'iv-nav'},
+        i>0&&h('button',{class:'back',onclick:()=>{i--;show();}},'◀ Zurück'),
+        h('button',{class:'next',onclick:()=>{if(!last){i++;show();}else{shush();(onCta||done)();}}},last?(onCta?s.cta:'Fertig ▶'):'Weiter ▶')));
+    window.scrollTo(0,0);
+    if(auto)say(spoken(s));
+  };
+  show();
+}
+
 function renderStart(msg){
   root.innerHTML='';
   const ix=store.index();
-  const wrap=h('div',{class:'start stack'},
+  if(!ix.length&&!msg&&!S.whyShown){S.whyShown=true;return renderWhy(()=>renderStart(' '),renderCreate);}
+  if(msg===' ')msg='';
+  const wrap=h('div',{class:'start stack bigstart'},
     h('div',{class:'logo'},'📁'),
-    h('h1',null,'Digitaler Vorsorgeordner'),
-    h('p',{class:'muted'},'Alle wichtigen Angaben für den Ernstfall an einem Ort. Verschlüsselt und nur auf diesem Gerät gespeichert.'),
+    h('h1',null,'Mein Vorsorgeordner'),
+    h('p',{class:'muted'},'Damit Ihre Familie im Ernstfall weiß, was zu tun ist. Verschlüsselt und nur auf diesem Gerät gespeichert.'),
+    h('div',null,h('button',{onclick:()=>renderWhy(()=>renderStart(' '))},'💡 Warum ein Vorsorgeordner?')),
     !store.ok&&h('div',{class:'errbox'},'Dieser Browser erlaubt kein Speichern. Bitte die Datei mit Microsoft Edge, Chrome oder Firefox öffnen.'),
     !(window.crypto&&crypto.subtle)&&h('div',{class:'errbox'},'Die Verschlüsselung ist in diesem Browser nicht verfügbar. Bitte Microsoft Edge, Chrome oder Firefox verwenden.'),
     msg&&h('div',{class:'note'},msg)
@@ -413,7 +467,7 @@ function renderStart(msg){
     )));
   }
   wrap.append(h('div',{class:'row'},
-    h('button',{class:ix.length?'':'primary big',onclick:renderCreate},'➕ Neuen Ordner anlegen'),
+    h('button',{class:ix.length?'':'primary big',onclick:renderCreate},ix.length?'➕ Neuen Ordner anlegen':'➕ Meinen Vorsorgeordner anlegen'),
     h('button',{onclick:importFile},'📂 Sicherungsdatei laden')
   ));
   const inst=installBox();if(inst)wrap.append(inst);
@@ -468,7 +522,7 @@ function renderUnlock(o){
 }
 function renderCreate(){
   root.innerHTML='';
-  const name=h('input',{type:'text',id:'nm',placeholder:'z. B. Markus Mustermann'});
+  const name=h('input',{type:'text',id:'nm',placeholder:'z. B. Maria Musterfrau'});
   const p1=h('input',{type:'password',id:'p1',autocomplete:'new-password'});
   const p2=h('input',{type:'password',id:'p2',autocomplete:'new-password'});
   const ok=h('input',{type:'checkbox',id:'ok',style:'width:auto;margin-right:.5rem'});
@@ -478,8 +532,8 @@ function renderCreate(){
   const err=h('div');
   const btn=h('button',{class:'primary big',onclick:async()=>{
     err.innerHTML='';const e=m=>err.append(h('div',{class:'errbox'},m));
-    if(!name.value.trim())return e('Bitte einen Namen eingeben.');
-    if(p1.value.length<10)return e('Das Passwort muss mindestens 10 Zeichen lang sein. Tipp: mehrere Wörter, z. B. „Garten Sonne Fahrrad 7“.');
+    if(!name.value.trim())return e('Bitte Ihren Namen eingeben.');
+    if(p1.value.length<10)return e('Das Passwort ist zu kurz. Es braucht mindestens 10 Zeichen. Tipp: drei Wörter, z. B. „Rosen Garten Sommer“.');
     if(p1.value!==p2.value)return e('Die beiden Passwörter stimmen nicht überein.');
     if(!ok.checked)return e('Bitte den Hinweis zum Passwort bestätigen.');
     if(!store.ok||!(window.crypto&&crypto.subtle))return e('Dieser Browser erlaubt hier keine Verschlüsselung oder kein Speichern. Bitte die Datei per Doppelklick in Microsoft Edge, Chrome oder Firefox öffnen.');
@@ -490,24 +544,27 @@ function renderCreate(){
       await persist();openStart();
     }catch(x){S.key=null;btn.disabled=false;btn.textContent='Ordner anlegen';e('Anlegen fehlgeschlagen: '+x.message);}
   }},'Ordner anlegen');
-  root.append(h('div',{class:'start stack'},
-    h('button',{class:'link',onclick:()=>renderStart()},'← zurück'),
-    h('h1',null,'Neuen Ordner anlegen'),
-    h('p',{class:'muted'},'Jede Person bekommt einen eigenen Ordner mit eigenem Passwort.'),
+  const lbl={style:'color:var(--ink);display:flex;align-items:flex-start;gap:.2rem;margin:.4rem 0'};
+  root.append(h('div',{class:'start stack bigstart'},
+    h('button',{class:'link',onclick:()=>{shush();renderStart(' ');}},'← zurück'),
+    h('h1',null,'Ihren Vorsorgeordner anlegen'),
     h('div',{class:'card stack'},
-      h('div',null,h('label',{for:'nm'},'Für wen ist der Ordner?'),name),
-      h('div',null,h('label',null,'Wie soll der Ordner bedient werden?'),
-        h('label',{for:'me',style:'color:var(--ink);display:flex;align-items:flex-start;margin:.3rem 0'},mEinfach,h('span',null,h('b',null,'Einfach: '),'eine Frage nach der anderen, große Schrift. Die Fragen werden vorgelesen, Antworten kann man sprechen oder tippen.')),
-        h('label',{for:'mv',style:'color:var(--ink);display:flex;align-items:flex-start;margin:.3rem 0'},mVoll,h('span',null,h('b',null,'Ausführlich: '),'alle Bereiche und Felder auf einen Blick.'))),
-      h('div',{class:'hint'},'Man kann später jederzeit zwischen beiden Ansichten wechseln.'),
-      h('label',{for:'nrw',style:'color:var(--ink);font-size:.95rem;display:flex;align-items:center'},nrw,'Vorgaben für Lehrkräfte im Ruhestand in NRW eintragen (LBV NRW, vlbs)'),
-      h('div',null,h('label',{for:'p1'},'Passwort (mindestens 10 Zeichen)'),p1),
-      h('div',null,h('label',{for:'p2'},'Passwort wiederholen'),p2),
-      h('div',{class:'warnbox'},h('b',null,'Wichtig: '),'Ohne dieses Passwort kann niemand den Ordner öffnen, auch kein Techniker. Schreiben Sie es auf Papier und legen Sie es in einen verschlossenen Umschlag, den Ihre Angehörigen im Ernstfall finden.'),
-      h('label',{for:'ok',style:'color:var(--ink);font-size:.95rem;display:flex;align-items:center'},ok,'Verstanden, ich bewahre das Passwort sicher auf.'),
+      h('div',null,h('label',{for:'nm'},'1. Wie heißen Sie?'),name),
+      h('p',{style:'margin:.4rem 0 0'},'Damit niemand Fremdes Ihre Angaben lesen kann, schützen Sie den Ordner mit einem Passwort.'),
+      h('div',{class:'hint'},'Tipp: Nehmen Sie drei Wörter, die Sie sich gut merken können, zum Beispiel „Rosen Garten Sommer“. Mindestens 10 Zeichen.'),
+      h('div',null,h('label',{for:'p1'},'2. Ihr Passwort'),p1),
+      h('div',null,h('label',{for:'p2'},'3. Passwort noch einmal'),p2),
+      h('div',{class:'warnbox'},h('b',null,'Wichtig: '),'Ohne dieses Passwort kann niemand den Ordner öffnen, auch kein Techniker. Schreiben Sie es auf einen Zettel und legen Sie ihn in einen verschlossenen Umschlag, den Ihre Angehörigen im Ernstfall finden.'),
+      h('label',{for:'ok',...lbl},ok,'Verstanden, ich bewahre das Passwort sicher auf.'),
+      h('details',{class:'more'},h('summary',null,'Weitere Einstellungen'),
+        h('div',{class:'stack',style:'margin-top:.6rem'},
+          h('label',{for:'me',...lbl},mEinfach,h('span',null,h('b',null,'Einfache Ansicht: '),'eine Frage nach der anderen, mit Vorlesen und Sprechen (empfohlen).')),
+          h('label',{for:'mv',...lbl},mVoll,h('span',null,h('b',null,'Ausführliche Ansicht: '),'alle Bereiche und Felder auf einen Blick.')),
+          h('label',{for:'nrw',...lbl},nrw,h('span',null,'Vorgaben für Lehrkräfte im Ruhestand in NRW eintragen (LBV NRW, vlbs)')))),
       err,btn)
   ));
   name.focus();
+  say('Jetzt legen wir Ihren Ordner an. Bitte tragen Sie Ihren Namen ein und wählen Sie ein Passwort.');
 }
 function migrate(){
   const d=S.data;d.check=d.check||{};
@@ -1063,6 +1120,7 @@ function ivMenu(){
     h('button',{onclick:exportFile},'💾 Sicherung speichern'),
     h('button',{onclick:printSheet},'🖨 Notfallblatt drucken'),
     h('button',{onclick:ivSettings},'⚙️ Vorlesen und Schriftgröße einstellen'),
+    h('button',{onclick:()=>renderWhy(ivMenu)},'💡 Warum ein Vorsorgeordner?'),
     h('button',{onclick:lock},'🔒 Sperren')));
   say('Menü. Was möchten Sie tun?');
 }
