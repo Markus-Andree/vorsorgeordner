@@ -155,6 +155,7 @@ body:has(.iv) .status{display:none}
 .dots span.on{background:var(--acc);width:1.9rem}
 .dots span.done{background:#8fb8a1}
 .why .why-p{font-size:1.02em;line-height:1.55;margin:.7em 0;animation:ivIn .5s ease both}
+.why.quote .why-p{background:#fff;border-left:5px solid var(--acc);border-radius:0 12px 12px 0;padding:.6em .9em}
 .why-list{list-style:none;padding:0;margin:.4em 0 .6em}
 .why-list li{background:#fff;border:2px solid var(--line);border-radius:14px;padding:.55em .8em;margin:.45em 0;animation:ivIn .5s ease both}
 .why-list li::before{content:"❔ "}
@@ -231,6 +232,7 @@ function h(tag,attrs,...kids){
   for(const c of kids.flat(Infinity)){if(c==null||c===false)continue;e.append(c.nodeType?c:document.createTextNode(String(c)));}
   return e;
 }
+function add(el,...kids){for(const c of kids.flat(Infinity)){if(c==null||c===false||c==='')continue;el.append(c.nodeType?c:String(c));}return el;}
 const fmtDate=iso=>{if(!iso)return '';const d=new Date(iso);return isNaN(d)?iso:d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});};
 const fmtDT=iso=>{if(!iso)return '';const d=new Date(iso);return d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+' Uhr';};
 
@@ -412,6 +414,7 @@ const root=document.getElementById('root');
 /* ---------- Einführung: Warum ein Vorsorgeordner? ---------- */
 const WHY=[
  {icon:'🤍',title:'Für den Fall der Fälle',text:['Niemand denkt gern daran.','Aber irgendwann kommt der Tag, an dem Ihre Familie ohne Sie zurechtkommen muss. Manchmal ganz plötzlich.']},
+ {icon:'💬',title:'Warum es diese App gibt',quote:true,text:['Zweimal in meinem Leben stand ich plötzlich vor einem Berg von Fragen: vor 30 Jahren, als mein Vater unerwartet starb, und vor zwei Jahren bei meinem Bruder.','Neben der Trauer kam die mühsame Suche: Welche Konten gibt es? Welche Versicherungen? Was muss gekündigt werden? Niemand wusste es.','Ich wünsche keiner Familie, das so erleben zu müssen. Mit ein paar Antworten von Ihnen bleibt es Ihren Liebsten erspart.']},
  {icon:'❓',title:'Dann stehen Ihre Angehörigen vor vielen Fragen',list:['Wo liegen die wichtigen Unterlagen?','Bei welchen Banken gibt es Konten?','Welche Versicherungen und Verträge laufen?','Wen müssen wir benachrichtigen?','Was hätte Mama oder Papa sich gewünscht?'],text:['Oft suchen sie wochenlang nach Antworten. Mitten in der Trauer.']},
  {icon:'🏥',title:'Auch zu Lebzeiten wichtig',text:['Nach einem Unfall oder bei schwerer Krankheit können Sie vielleicht nicht mehr selbst sprechen.','Dann wissen Ihre Liebsten: Wer darf für Sie entscheiden? Welcher Arzt kennt Sie? Wo liegen Ihre Vollmachten?']},
  {icon:'🕊️',title:'Ihre Wünsche zählen',text:['Wie möchten Sie bestattet werden? Welches Lied soll gespielt werden? Wer soll es erfahren?','Wenn Sie es festhalten, müssen Ihre Angehörigen nicht raten. Und es wird so, wie Sie es sich wünschen.']},
@@ -425,14 +428,14 @@ function renderWhy(done,onCta){
   const show=()=>{
     shush();
     const s=WHY[i],last=i===WHY.length-1;
-    const card=h('div',{class:'iv-card why'});
+    const card=h('div',{class:'iv-card why'+(s.quote?' quote':'')});
     root.innerHTML='';
     root.append(h('div',{class:'iv',style:'--ivfs:'+prefs().size+'rem'},
       h('div',{class:'iv-top'},
         h('div',{class:'dots',role:'img','aria-label':'Seite '+(i+1)+' von '+WHY.length},WHY.map((_,k)=>h('span',{class:k===i?'on':k<i?'done':''}))),
         h('button',{onclick:()=>{shush();done();}},last?'Schließen':'Überspringen')),
       h('div',{class:'iv-main'},card)));
-    card.append(
+    add(card,
       h('div',{style:'text-align:center'},h('div',{class:'iv-halo'},h('div',{class:'iv-icon','aria-hidden':'true'},s.icon))),
       h('div',{class:'iv-q',style:'text-align:center'},s.title),
       s.list&&h('ul',{class:'why-list'},s.list.map((t,k)=>h('li',{style:'animation-delay:'+(0.25+k*0.35).toFixed(2)+'s'},t))),
@@ -613,7 +616,7 @@ function viewHome(m){
   if(!ix.lastBackup)warns.push(h('div',{class:'warnbox'},'💾 Sie haben noch keine Sicherungsdatei erstellt. Wenn der Browser-Speicher gelöscht wird, sind die Daten sonst weg. ',h('button',{class:'link',onclick:()=>go('sicherung')},'Jetzt sichern')));
   else if(Date.now()-new Date(ix.lastBackup)>90*864e5)warns.push(h('div',{class:'warnbox'},'💾 Die letzte Sicherung ist älter als drei Monate ('+fmtDate(ix.lastBackup)+'). ',h('button',{class:'link',onclick:()=>go('sicherung')},'Neu sichern')));
   if(!(S.data.s.notfall.zugriff||[]).some(p=>p.name))warns.push(h('div',{class:'warnbox'},'🔑 Tragen Sie ein, wer im Ernstfall Zugriff hat, und drucken Sie das Notfallblatt. ',h('button',{class:'link',onclick:()=>go('sec:notfall')},'Zum Notfallzugang')));
-  m.append(
+  add(m,
     h('h1',null,'Übersicht'),
     h('p',{class:'muted'},'Füllen Sie die Bereiche nach und nach aus. Alles wird automatisch verschlüsselt gespeichert. Leere Felder sind kein Problem.'),
     ...warns,
@@ -680,7 +683,7 @@ function viewSection(m,sec){
 
 function viewCheck(m){
   const done=Object.values(S.data.check).filter(Boolean).length,total=CHECK.reduce((a,p)=>a+p.items.length,0);
-  m.append(h('h1',null,'⚠️ Im Ernstfall: Was ist zu tun?'),
+  add(m,h('h1',null,'⚠️ Im Ernstfall: Was ist zu tun?'),
     h('div',{class:'note'},'Diese Liste führt Schritt für Schritt durch die ersten Wochen. Erledigtes können Sie abhaken. ',h('b',null,done+' von '+total+' erledigt.')),
     h('p',{class:'small muted'},'Allgemeine Hinweise für Nordrhein-Westfalen und Pensionäre, Stand November 2026, ohne Gewähr. Sie ersetzen keine Rechtsberatung. Im Zweifel helfen der Bestatter, das Amtsgericht (Nachlassgericht), ein Notar oder das LBV.'));
   for(const ph of CHECK){
@@ -746,7 +749,7 @@ function viewBackup(m){
   const ix=store.index().find(x=>x.id===S.id)||{};
   const withPw=h('input',{type:'checkbox',id:'wp',style:'width:auto;margin-right:.5rem'});
   const np1=h('input',{type:'password',autocomplete:'new-password'}),np2=h('input',{type:'password',autocomplete:'new-password'}),perr=h('div');
-  m.append(h('h1',null,'💾 Sicherung und Drucken'),
+  add(m,h('h1',null,'💾 Sicherung und Drucken'),
     h('section',{class:'card stack'},h('h2',null,'Sicherungsdatei'),
       h('p',null,'Die Daten liegen nur im Browser dieses Geräts. Speichern Sie deshalb regelmäßig eine Sicherungsdatei, am besten nach jeder größeren Änderung, und legen Sie sie auf einen USB-Stick zum Notfallblatt. Die Datei ist verschlüsselt.'),
       h('p',{class:'small muted'},'Letzte Sicherung: '+(ix.lastBackup?fmtDT(ix.lastBackup):'noch nie')),
@@ -861,9 +864,9 @@ const IV=[
  {intro:true,ch:'Ihre Familie',icon:'👨‍👩‍👧',text:'Jetzt geht es um Ihre Familie.'},
  {id:'partner',t:['person','partner','Name, Vorname'],q:'Wie heißt Ihr Ehepartner oder Ihre Partnerin?',help:'Auch wenn Ihr Partner schon verstorben ist, können Sie den Namen nennen.'},
  {id:'partnertod',t:['person','partner','Ggf. Sterbedatum'],q:'Wann ist Ihr Partner verstorben?',help:'Zum Beispiel: 12. Mai 1995',cond:()=>ivVal('person','eigene','Familienstand')==='verwitwet'},
- {id:'kinder',rep:['person','kinder'],ask:'Haben Sie Kinder?',item:'Kind',more:'Möchten Sie noch ein Kind eintragen?',fields:[['Name, Vorname','Wie heißt Ihr Kind?'],['Telefon','Wie lautet die Telefonnummer von {name}?'],['Adresse','Wo wohnt {name}?']]},
+ {id:'kinder',rep:['person','kinder'],who:'Ihr Kind',whoD:'Ihrem Kind',ask:'Haben Sie Kinder?',item:'Kind',more:'Möchten Sie noch ein Kind eintragen?',fields:[['Name, Vorname','Wie heißt Ihr Kind?'],['Telefon','Wie lautet die Telefonnummer von {nameD}?'],['Adresse','Wo wohnt {name}?']]},
  {intro:true,ch:'Wichtige Menschen',icon:'🤝',text:'Jetzt geht es darum, wen Ihre Angehörigen im Ernstfall anrufen sollen.'},
- {id:'benach',rep:['todesfall','benach'],ask:'Gibt es Menschen, die sofort benachrichtigt werden sollen?',help:'Zum Beispiel Geschwister, gute Freunde oder Nachbarn.',item:'Person',more:'Möchten Sie noch jemanden eintragen?',preset:{wann:'sofort'},fields:[['Name','Wie heißt die Person?'],['Beziehung','Wer ist {name} für Sie?','Zum Beispiel: Schwester, Nachbarin, Freund'],['Telefon','Wie lautet die Telefonnummer von {name}?']]},
+ {id:'benach',rep:['todesfall','benach'],ask:'Gibt es Menschen, die sofort benachrichtigt werden sollen?',help:'Zum Beispiel Geschwister, gute Freunde oder Nachbarn.',item:'Person',more:'Möchten Sie noch jemanden eintragen?',preset:{wann:'sofort'},fields:[['Name','Wie heißt die Person?'],['Beziehung','Wer ist {name} für Sie?','Zum Beispiel: Schwester, Nachbarin, Freund'],['Telefon','Wie lautet die Telefonnummer von {nameD}?']]},
  {id:'arzt',where:['vorsorge','vertrauen',{rolle:'Hausarzt/Hausärztin'}],field:'Name',q:'Wie heißt Ihr Hausarzt oder Ihre Hausärztin?'},
  {id:'arzttel',where:['vorsorge','vertrauen',{rolle:'Hausarzt/Hausärztin'}],field:'Telefon',q:'Wie lautet die Telefonnummer der Arztpraxis?'},
  {intro:true,ch:'Papiere und Vollmachten',icon:'📜',text:'Jetzt geht es um wichtige Papiere: Vollmachten, Testament und Urkunden.'},
@@ -898,7 +901,7 @@ const IV=[
  {id:'feier',t:['todesfall','bestattung','Trauerfeier (Art, Musik, Redner)'],q:'Haben Sie Wünsche für die Trauerfeier?',help:'Zum Beispiel ein Lied, ein Gedicht oder wer sprechen soll.'},
  {id:'worte',t:['todesfall','worte','Persönliche Worte an meine Angehörigen'],q:'Möchten Sie Ihren Angehörigen noch etwas sagen?',help:'Das ist ganz freiwillig.'},
  {intro:true,ch:'Zugang im Ernstfall',icon:'🔑',text:'Fast geschafft! Zum Schluss: Wer soll diesen Ordner im Ernstfall öffnen dürfen?'},
- {id:'zug',rep:['notfall','zugriff'],ask:'Soll jemand im Ernstfall Zugang zu diesem Ordner bekommen?',help:'Diese Person bekommt später das Notfallblatt mit dem Passwort.',item:'Person',more:'Soll noch jemand Zugang bekommen?',fields:[['Name','Wie heißt die Person?'],['Beziehung','Wer ist {name} für Sie?','Zum Beispiel: Sohn, Tochter, Nichte'],['Telefon','Wie lautet die Telefonnummer von {name}?']]},
+ {id:'zug',rep:['notfall','zugriff'],ask:'Soll jemand im Ernstfall Zugang zu diesem Ordner bekommen?',help:'Diese Person bekommt später das Notfallblatt mit dem Passwort.',item:'Person',more:'Soll noch jemand Zugang bekommen?',fields:[['Name','Wie heißt die Person?'],['Beziehung','Wer ist {name} für Sie?','Zum Beispiel: Sohn, Tochter, Nichte'],['Telefon','Wie lautet die Telefonnummer von {nameD}?']]},
  {id:'pwort',t:['notfall','ort','Wo liegt das Passwort?'],q:'Wo bewahren Sie den Zettel mit dem Passwort auf?',help:'Bitte nur den Ort nennen, nicht das Passwort selbst.'},
  {end:true}
 ];
@@ -1005,12 +1008,12 @@ function ivShow(pages,i){
     tg=pageTarget(p);
     if(p.entry!=null){
       const e=repList(s)[p.entry];const nm=e[slug('Name, Vorname')]||e[slug('Name')]||'';
-      q=p.f[1].replace('{name}',nm||'dieser Person');help=p.f[2]||'';entryLabel=s.item+' '+(p.entry+1);
+      q=p.f[1].replace('{nameD}',nm||s.whoD||'dieser Person').replace('{name}',nm||s.who||'diese Person');help=p.f[2]||'';entryLabel=s.item+' '+(p.entry+1);
     }else{q=s.q;help=s.help||'';}
     if(tg.f.type==='s'||s.choices)choices=s.choices||[...tg.f.opts.map(o=>[o,cap(o)]),...(s.extra||[])];
   }
   const spoken=q+(help&&p.type!=='more'?' '+help:'');
-  card.append(entryLabel&&h('div',{class:'iv-chap'},entryLabel),h('div',{class:'iv-q'},q),help&&h('div',{class:'iv-help'},help));
+  add(card,entryLabel&&h('div',{class:'iv-chap'},entryLabel),h('div',{class:'iv-q'},q),help&&h('div',{class:'iv-help'},help));
   const info=h('div',{class:'iv-info',hidden:true});
   const showInfo=t=>{info.textContent=t;info.hidden=false;say(t);};
   const heard=h('div',{class:'iv-heard',hidden:true});
@@ -1062,7 +1065,7 @@ function ivShow(pages,i){
         mic.classList.add('on');micLabel('Ich höre zu … (zum Beenden tippen)');
       });
     };
-    card.append(h('div',{class:'iv-choices'},btns),SR&&mic,heard,info,
+    add(card,h('div',{class:'iv-choices'},btns),SR&&mic,heard,info,
       h('div',{class:'iv-small'},sayBtn(spoken)),
       navRow({skip:p.type==='field',next:false}));
     say(spoken);return;
@@ -1096,7 +1099,7 @@ function ivShow(pages,i){
       mic.classList.add('on');micLabel('Ich höre zu … (zum Beenden tippen)');
     });
   };
-  card.append(ctl,f.type!=='p'&&SR&&mic,heard,info,
+  add(card,ctl,f.type!=='p'&&SR&&mic,heard,info,
     h('div',{class:'iv-small'},sayBtn(spoken),f.type!=='p'&&h('button',{onclick:()=>{inp.value='';commit();heard.hidden=true;inp.focus();}},'✖ Antwort löschen')),
     navRow({skip:true,onNext:()=>{commit();next();}}));
   say(spoken);
