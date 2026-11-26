@@ -2,7 +2,7 @@
    Speichert nur das Programm selbst (keine persönlichen Daten – die liegen
    verschlüsselt im Browser-Speicher). Bei Internet wird die neueste Version
    geholt, ohne Internet die gespeicherte benutzt. */
-const CACHE = 'vorsorgeordner-v7';
+const CACHE = 'vorsorgeordner-v8';
 const FILES = [
   './', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png',

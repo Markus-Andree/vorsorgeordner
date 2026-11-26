@@ -216,7 +216,7 @@ details.more summary{cursor:pointer;color:var(--acc);font-weight:600}
    (PBKDF2-SHA-256, 600.000 Durchläufe).
    ============================================================ */
 
-const APP_VERSION = '1.0';
+const APP_VERSION = '1.1';
 const IS_WEB = location.protocol==='http:'||location.protocol==='https:';
 const APP_URL = IS_WEB ? location.origin+location.pathname.replace(/index\.html$/,'') : null;
 const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
@@ -915,18 +915,41 @@ function viewBackup(m){
 
 /* ---------- Einstellungen (nicht geheim, daher unverschlüsselt) ---------- */
 const PREF_KEY='vo.prefs';
-function prefs(){let p={};try{p=JSON.parse(localStorage.getItem(PREF_KEY)||'{}')}catch(e){}return{speak:true,rate:.9,size:1.3,micInfo:false,...p};}
+function prefs(){let p={};try{p=JSON.parse(localStorage.getItem(PREF_KEY)||'{}')}catch(e){}return{speak:true,tempo:1.05,voice:'',size:1.3,micInfo:false,...p};}
 function setPref(k,val){const p=prefs();p[k]=val;try{localStorage.setItem(PREF_KEY,JSON.stringify(p))}catch(e){}}
 
 /* ---------- Vorlesen ---------- */
 const canSpeak='speechSynthesis' in window;
 let deVoice=null;
-function pickVoice(){if(!canSpeak)return;const vs=speechSynthesis.getVoices().filter(x=>/^de/i.test(x.lang));deVoice=vs.find(x=>/natural|online|neural/i.test(x.name))||vs.find(x=>/google/i.test(x.name))||vs.find(x=>x.localService)||vs[0]||null;}
+/* Deutsche Stimmen, die natürlichsten zuerst */
+function voiceScore(x){
+  const n=x.name;let s=0;
+  if(/natural|neural|premium|erweitert|enhanced|online|wavenet/i.test(n))s+=50;
+  if(/network/i.test(n+' '+x.voiceURI))s+=40;
+  if(/google/i.test(n))s+=30;
+  if(/de-DE/i.test(x.lang.replace('_','-')))s+=10;
+  if(/compact|espeak|robot/i.test(n))s-=60;
+  return s;
+}
+function deVoices(){
+  if(!canSpeak)return[];
+  return speechSynthesis.getVoices().filter(x=>/^de/i.test(x.lang)).sort((a,b)=>voiceScore(b)-voiceScore(a));
+}
+function voiceLabel(x){
+  let n=x.name.replace(/^Microsoft\s+/i,'').replace(/\s*-\s*(German|Deutsch).*$/i,'').replace(/\s*\((Germany|Deutschland|German)\)/i,'');
+  if(/^de[-_]/i.test(n)||/^Deutsch/i.test(n))n='Deutsch'+(/network/i.test(x.name+x.voiceURI)?' (Internet)':'');
+  return n;
+}
+function pickVoice(){
+  const vs=deVoices(),want=prefs().voice;
+  deVoice=(want&&vs.find(x=>x.voiceURI===want||x.name===want))||vs[0]||null;
+}
 if(canSpeak){pickVoice();try{speechSynthesis.addEventListener('voiceschanged',pickVoice);}catch(e){speechSynthesis.onvoiceschanged=pickVoice;}}
 function say(text,force){
   if(!canSpeak||!text||(!force&&!prefs().speak))return;
   speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);u.lang='de-DE';if(deVoice)u.voice=deVoice;u.rate=prefs().rate;
+  if(!deVoice)pickVoice();
+  const u=new SpeechSynthesisUtterance(text);u.lang=deVoice?deVoice.lang:'de-DE';if(deVoice)u.voice=deVoice;u.rate=prefs().tempo;u.pitch=1;
   speechSynthesis.speak(u);
 }
 function shush(){if(canSpeak)speechSynthesis.cancel();}
@@ -1312,13 +1335,24 @@ function ivMenu(){
     h('button',{onclick:lock},'🔒 Sperren')));
   say('Menü. Was möchten Sie tun?');
 }
+function voiceChooser(){
+  const vs=deVoices().slice(0,8),cur=deVoice&&deVoice.voiceURI;
+  const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent),android=/Android/i.test(navigator.userAgent);
+  const tip=ios?'Schönere Stimmen: iPhone-Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch. Dort z. B. „Anna (Premium)“ oder „Helena (Erweitert)“ laden. Danach die App neu öffnen.'
+    :android?'Schönere Stimmen: Handy-Einstellungen → Text-in-Sprache-Ausgabe (meist unter Bedienungshilfen) → Google Sprachausgabe → Sprachdaten installieren → Deutsch. Dort eine andere Stimme wählen. Danach die App neu öffnen.'
+    :'Weitere Stimmen lassen sich in den Einstellungen des Geräts installieren.';
+  return h('div',null,h('div',{class:'iv-help'},'Stimme (antippen zum Probehören)'),
+    vs.length?h('div',{class:'opts'},vs.map(x=>h('button',{class:x.voiceURI===cur?'sel':'',onclick:()=>{setPref('voice',x.voiceURI);pickVoice();ivSettings();say('Guten Tag. So klinge ich.',true);}},voiceLabel(x)))):h('div',{class:'iv-info',id:'vwait'},(setTimeout(()=>{if(document.getElementById('vwait')&&deVoices().length)ivSettings();},1000),'Stimmen werden geladen …')),
+    h('div',{class:'iv-info',style:'margin-top:.5rem;font-size:.85em'},tip));
+}
 function ivSettings(){
   const card=ivFrame('Einstellungen',0,'⚙️');
   const p=prefs();
   const opt=(key,list)=>h('div',{class:'opts'},list.map(([val,label])=>h('button',{class:p[key]===val?'sel':'',onclick:()=>{setPref(key,val);ivSettings();if(key!=='size')say('So klingt es jetzt.',true);}},label)));
   card.append(h('div',{class:'iv-q'},'Einstellungen'),h('div',{class:'iv-set'},
     h('div',null,h('div',{class:'iv-help'},'Fragen automatisch vorlesen'),opt('speak',[[true,'An'],[false,'Aus']])),
-    h('div',null,h('div',{class:'iv-help'},'Sprechtempo'),opt('rate',[[.75,'Langsam'],[.9,'Normal'],[1.1,'Schneller']])),
+    h('div',null,h('div',{class:'iv-help'},'Sprechtempo'),opt('tempo',[[.85,'Langsam'],[1.05,'Normal'],[1.25,'Schneller'],[1.45,'Sehr schnell']])),
+    canSpeak&&voiceChooser(),
     h('div',null,h('div',{class:'iv-help'},'Schriftgröße'),opt('size',[[1.3,'Groß'],[1.55,'Sehr groß'],[1.8,'Riesig']])),
     !canSpeak&&h('div',{class:'iv-info'},'Dieser Browser kann leider nicht vorlesen.'),
     h('div',{class:'iv-nav'},h('button',{class:'next',onclick:ivMenu},'◀ Zurück zum Menü'))));
