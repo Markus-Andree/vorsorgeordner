@@ -168,6 +168,7 @@ details.more summary{cursor:pointer;color:var(--acc);font-weight:600}
 @keyframes fall{to{transform:translateY(112vh) rotate(380deg)}}
 @media (prefers-reduced-motion:reduce){.iv-card,.iv-icon,.iv-halo,.iv-mic.on::before,.iv-mic.on::after,.petal,.iv-heard,.plant{animation:none!important}}
 
+.robanner{background:#e8eef8;border:2px solid #9db3d8;color:#1f3557;border-radius:var(--r);padding:.8rem 1rem;margin-bottom:1rem}
 .ptabs{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:0 0 1rem}
 .ptabs button{border-radius:22px;padding:.45rem 1rem}
 .ptabs button.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
@@ -465,7 +466,7 @@ function newData(opt={}){
   return d;
 }
 function lockMinutes(){return S.data&&S.data.meta.mode==='einfach'?30:AUTO_LOCK_MIN;}
-function openStart(){try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}if(S.data.meta.mode==='einfach')renderInterview();else renderApp();}
+function openStart(){try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}if(S.ro){S.view='home';return renderApp();}if(S.data.meta.mode==='einfach')renderInterview();else renderApp();}
 async function persist(){
   if(!S.key)return;
   S.data.meta.updated=new Date().toISOString();
@@ -474,7 +475,7 @@ async function persist(){
   try{store.set('vo.data.'+S.id,JSON.stringify(blob));store.upsertIndex({id:S.id,name:S.name,updated:blob.updated,mode:S.data.meta.mode});setStatus('Gespeichert ✓');}
   catch(e){setStatus('⚠ Speichern fehlgeschlagen!');alert('Speichern fehlgeschlagen: '+e.message);}
 }
-function touch(){S.lastAct=Date.now();setStatus('Wird gespeichert …');clearTimeout(saveTimer);saveTimer=setTimeout(persist,700);}
+function touch(nav){if(!nav&&S.data)S.data.meta.changed=new Date().toISOString();S.lastAct=Date.now();setStatus('Wird gespeichert …');clearTimeout(saveTimer);saveTimer=setTimeout(persist,700);}
 function setStatus(t){const el=document.getElementById('status');el.hidden=!S.key;el.textContent=t;}
 async function flush(){if(saveTimer){clearTimeout(saveTimer);saveTimer=null;await persist();}}
 async function lock(){shush();stopListen();await flush();S.key=null;S.data=null;S.id=null;S.view='home';setStatus('');renderStart();}
@@ -540,7 +541,7 @@ function renderStart(msg){
   );
   if(ix.length){
     wrap.append(h('div',{class:'card'},h('h2',null,'Ordner öffnen'),h('div',{class:'olist'},
-      ix.map(o=>h('button',{onclick:()=>renderUnlock(o)},h('span',null,'📁 ',h('b',null,o.name)),h('span',{class:'muted small'},'geändert '+fmtDate(o.updated))))
+      ix.map(o=>h('button',{onclick:()=>renderUnlock(o)},h('span',null,o.role==='kopie'?'📖 ':'📁 ',h('b',null,o.name),o.role==='kopie'?' (Lesekopie)':''),h('span',{class:'muted small'},'geändert '+fmtDate(o.updated))))
     )));
   }
   wrap.append(h('div',{class:'row'},
@@ -660,6 +661,7 @@ function migrate(){
   const d=S.data;d.check=d.check||{};d.iv=d.iv||{pos:null,ans:{}};
   if(!d.persons)d.persons=[{id:'a',name:S.name}];
   S.pid='a';S.ernst=null;
+  S.ro=((store.index().find(x=>x.id===S.id)||{}).role==='kopie');
   for(const sec of SCHEMA){d.s[sec.id]=d.s[sec.id]||{};for(const g of sec.groups){if(d.s[sec.id][g.id]==null)d.s[sec.id][g.id]=g.repeat?[]:{};}}
 }
 
@@ -683,14 +685,14 @@ function renderApp(){
   const side=h('nav',{class:'side'},
     h('div',{class:'who'},'Vorsorgeordner von',h('b',null,S.name)),
     nav('home','🏠 Übersicht'),
-    h('button',{onclick:()=>{S.data.meta.mode='einfach';touch();renderInterview();}},'🎙️ Einfache Ansicht'),
+    !S.ro&&h('button',{onclick:()=>{S.data.meta.mode='einfach';touch(true);renderInterview();}},'🎙️ Einfache Ansicht'),
     nav('ernstfall','⚠️ Im Ernstfall','emerg'),
     SCHEMA.map(sec=>{const p=progress(sec);return h('button',{class:S.view==='sec:'+sec.id?'on':'',onclick:()=>{app.classList.remove('menu');go('sec:'+sec.id);}},h('span',null,sec.icon),h('span',null,sec.title),h('span',{class:'pct'},p.pct+' %'));}),
     h('div',{class:'sep'}),
     nav('sicherung','💾 Sicherung und Drucken'),
     h('button',{onclick:lock},'🔒 Sperren')
   );
-  const main=h('main',{class:'main'});
+  const main=h('main',{class:'main'},S.ro&&h('div',{class:'robanner'},'📖 ',h('b',null,'Lesekopie'),' vom '+fmtDT(S.data.meta.updated)+'. Zum Nachschlagen, zum Beispiel im Ernstfall. Geändert wird nur auf dem Hauptgerät, von dort kommt bei Bedarf eine neue Kopie.'));
   const app=h('div',{class:'app'},
     h('div',{class:'topbar'},h('button',{onclick:()=>app.classList.toggle('menu')},'☰ Menü'),h('b',null,'Vorsorgeordner')),
     side,main);
@@ -705,7 +707,9 @@ function renderApp(){
 function viewHome(m){
   const ix=store.index().find(x=>x.id===S.id)||{};
   const warns=[];
-  if(!ix.lastBackup)warns.push(h('div',{class:'warnbox'},'💾 Sie haben noch keine Sicherungsdatei erstellt. Wenn der Browser-Speicher gelöscht wird, sind die Daten sonst weg. ',h('button',{class:'link',onclick:()=>go('sicherung')},'Jetzt sichern')));
+  if(S.ro){}
+  else if(ix.lastBackup&&S.data.meta.changed&&new Date(S.data.meta.changed)>new Date(ix.lastBackup))warns.push(h('div',{class:'warnbox'},'🔄 Seit der letzten Kopie hat sich etwas geändert. Schicken Sie Ihrem Partner bzw. Ihren Angehörigen eine neue Kopie, damit ihre Lesekopie aktuell ist. ',h('button',{class:'link',onclick:exportFile},'Neue Kopie verschicken')));
+  else if(!ix.lastBackup)warns.push(h('div',{class:'warnbox'},'💾 Sie haben noch keine Sicherungsdatei erstellt. Wenn der Browser-Speicher gelöscht wird, sind die Daten sonst weg. ',h('button',{class:'link',onclick:()=>go('sicherung')},'Jetzt sichern')));
   else if(Date.now()-new Date(ix.lastBackup)>90*864e5)warns.push(h('div',{class:'warnbox'},'💾 Die letzte Sicherung ist älter als drei Monate ('+fmtDate(ix.lastBackup)+'). ',h('button',{class:'link',onclick:()=>go('sicherung')},'Neu sichern')));
   if(!(S.data.s.notfall.zugriff||[]).some(p=>p.name))warns.push(h('div',{class:'warnbox'},'🔑 Tragen Sie ein, wer im Ernstfall Zugriff hat, und drucken Sie das Notfallblatt. ',h('button',{class:'link',onclick:()=>go('sec:notfall')},'Zum Notfallzugang')));
   add(m,
@@ -728,6 +732,7 @@ function fieldEl(f,obj,after){
   else{inp=h('input',{id,type:'text'});inp.value=val;}
   const upd=()=>{obj[f.k]=inp.value;after&&after();touch();};
   inp.addEventListener('input',upd);inp.addEventListener('change',upd);
+  if(S.ro)inp.disabled=true;
   let ctl=inp;
   if(f.type==='p'){const b=h('button',{type:'button',class:'eye',title:'Anzeigen / verbergen','aria-label':'Anzeigen'},'👁');b.onclick=()=>{inp.type=inp.type==='password'?'text':'password';};ctl=h('div',{class:'pw'},inp,b);}
   return h('div',{class:'field'+(f.type==='a'?' wide':'')},h('label',{for:id},f.label),ctl,f.hint&&h('div',{class:'hint'},f.hint));
@@ -752,12 +757,12 @@ function viewSection(m,sec){
           const det=h('details',{class:'entry',open:i===openIdx||undefined},
             h('summary',null,h('span',null,g.repeat+' '+(i+1)+':'),h('span',{class:'sub'},sumTxt)),
             h('div',{class:'body'},h('div',{class:'grid'},g.fields.map(f=>fieldEl(f,e,()=>{sumTxt.textContent=entryTitle(g,e);}))),
-              h('div',{class:'entryfoot'},h('button',{class:'danger',onclick:()=>{if(confirm(g.repeat+' „'+entryTitle(g,e)+'“ wirklich entfernen?')){list.splice(i,1);touch();draw();}}},'🗑 Entfernen'))));
+              !S.ro&&h('div',{class:'entryfoot'},h('button',{class:'danger',onclick:()=>{if(confirm(g.repeat+' „'+entryTitle(g,e)+'“ wirklich entfernen?')){list.splice(i,1);touch();draw();}}},'🗑 Entfernen'))));
           box.append(det);
         });
       };
       draw();
-      card.append(box,h('button',{onclick:()=>{list.push({});touch();draw(list.length-1);const ds=box.querySelectorAll('details');const last=ds[ds.length-1];last&&last.querySelector('input,select,textarea').focus();}},'➕ '+g.repeat+' hinzufügen'));
+      add(card,box,!S.ro&&h('button',{onclick:()=>{list.push({});touch();draw(list.length-1);const ds=box.querySelectorAll('details');const last=ds[ds.length-1];last&&last.querySelector('input,select,textarea').focus();}},'➕ '+g.repeat+' hinzufügen'));
     }else{
       const obj=getG(sec.id,g.id);
       card.append(h('div',{class:'grid'},g.fields.map(f=>fieldEl(f,obj))));
@@ -802,7 +807,7 @@ function viewCheck(m){
         h('div',{class:'t'},it.t),it.d&&h('div',{class:'d'},it.d),
         data&&data.trim()&&h('div',{class:'data'},data.trim()),
         it.ref&&h('button',{class:'link small',onclick:()=>go('sec:'+it.ref)},'→ '+SEC[it.ref].title+' ansehen')));
-      cb.onchange=()=>{S.data.check[key]=cb.checked;row.classList.toggle('done',cb.checked);touch();};
+      cb.onchange=()=>{S.data.check[key]=cb.checked;row.classList.toggle('done',cb.checked);touch(true);};
       sec.append(row);
     }
     m.append(sec);
@@ -833,23 +838,37 @@ async function exportFile(){
   store.upsertIndex({id:S.id,lastBackup:new Date().toISOString()});
   alert(shared
     ?'Die Sicherung wurde verschickt.\n\nTipp: Schicken Sie sie an eine Vertrauensperson, zum Beispiel per E-Mail oder WhatsApp. Die Datei ist verschlüsselt und nur mit Ihrem Passwort lesbar.'
-    :'Die Sicherungsdatei „'+fname+'“ wurde in Ihren Download-Ordner gespeichert.\n\nKopieren Sie sie auf einen USB-Stick oder schicken Sie sie per E-Mail an eine Vertrauensperson. Die Datei ist verschlüsselt und nur mit Ihrem Passwort lesbar.');
+    :'Die Sicherungsdatei „'+fname+'“ wurde in Ihren Download-Ordner gespeichert.\n\nSchicken Sie sie per WhatsApp oder E-Mail an Ihren Partner bzw. Ihre Angehörigen. Dort in der App „Sicherungsdatei laden“ wählen und „Als Lesekopie“ antippen. Die Datei ist verschlüsselt und nur mit Ihrem Passwort lesbar.');
   if(document.querySelector('.iv'))ivMenu();else renderApp();
+}
+function renderRoleChoice(b){
+  root.innerHTML='';
+  const pick=role=>{store.upsertIndex({id:b.id,role});renderStart(role==='kopie'
+    ?'Die Lesekopie „'+b.name+'“ ist eingerichtet. Zum Öffnen antippen und das Passwort eingeben.'
+    :'„'+b.name+'“ wird ab jetzt auf diesem Gerät bearbeitet. Zum Öffnen antippen und das Passwort eingeben.');};
+  root.append(h('div',{class:'start stack bigstart'},
+    h('h1',null,'Wie soll dieser Ordner hier genutzt werden?'),
+    h('p',null,'„'+b.name+'“, Stand vom '+fmtDT(b.updated)+'.'),
+    h('button',{class:'primary big',style:'text-align:left',onclick:()=>pick('kopie')},'📖 Als Lesekopie (empfohlen)',h('div',{style:'font-weight:400;font-size:.9rem;margin-top:.3rem'},'Zum Nachschlagen, zum Beispiel im Ernstfall. Geändert wird nur auf dem Hauptgerät, von dort kommt bei Bedarf eine neue Kopie.')),
+    h('button',{class:'big',style:'text-align:left',onclick:()=>pick('haupt')},'✏️ Als Hauptgerät',h('div',{style:'font-weight:400;font-size:.9rem;margin-top:.3rem'},'Nur wählen, wenn ab jetzt hier statt auf dem alten Gerät bearbeitet wird, zum Beispiel bei einem neuen Handy.'))));
 }
 function importFile(){
   const inp=h('input',{type:'file',accept:'.json,application/json'});
   inp.onchange=async()=>{
     const f=inp.files[0];if(!f)return;
-    try{
-      const b=JSON.parse(await f.text());
-      if(b.app!=='vorsorgeordner'||!b.ct||!b.salt)throw new Error('Das ist keine Sicherungsdatei des Vorsorgeordners.');
-      const ex=store.index().find(x=>x.id===b.id);
-      if(ex&&!confirm('Der Ordner „'+b.name+'“ ist auf diesem Gerät schon vorhanden (geändert '+fmtDT(ex.updated)+').\nDie Sicherung ist vom '+fmtDT(b.updated)+'.\n\nVorhandenen Ordner durch die Sicherung ERSETZEN?'))return;
-      store.set('vo.data.'+b.id,JSON.stringify(b));store.upsertIndex({id:b.id,name:b.name,updated:b.updated,lastBackup:b.updated});
-      renderStart('Die Sicherung „'+b.name+'“ wurde geladen. Zum Öffnen anklicken und Passwort eingeben.');
-    }catch(e){alert('Laden fehlgeschlagen: '+e.message);}
+    try{importBlob(JSON.parse(await f.text()));}catch(e){alert('Laden fehlgeschlagen: '+e.message);}
   };
   inp.click();
+}
+function importBlob(b){
+      if(b.app!=='vorsorgeordner'||!b.ct||!b.salt)throw new Error('Das ist keine Sicherungsdatei des Vorsorgeordners.');
+      const ex=store.index().find(x=>x.id===b.id);
+      if(ex&&ex.role==='kopie'){
+        if(!confirm('Lesekopie „'+b.name+'“ aktualisieren?\n\nBisher: Stand vom '+fmtDT(ex.updated)+'\nNeu: Stand vom '+fmtDT(b.updated)))return;
+      }else if(ex&&!confirm('ACHTUNG: Der Ordner „'+b.name+'“ wird auf diesem Gerät bearbeitet (Hauptgerät, geändert '+fmtDT(ex.updated)+').\nDie Sicherung ist vom '+fmtDT(b.updated)+'.\n\nVorhandenen Ordner durch die Sicherung ERSETZEN? Änderungen seit der Sicherung gehen dabei verloren.'))return;
+      store.set('vo.data.'+b.id,JSON.stringify(b));store.upsertIndex({id:b.id,name:b.name,updated:b.updated,lastBackup:b.updated});
+      if(ex)return renderStart((ex.role==='kopie'?'Die Lesekopie':'Der Ordner')+' „'+b.name+'“ ist jetzt auf dem Stand vom '+fmtDT(b.updated)+'.');
+      renderRoleChoice(b);
 }
 function viewBackup(m){
   const ix=store.index().find(x=>x.id===S.id)||{};
@@ -864,7 +883,7 @@ function viewBackup(m){
       h('p',null,'Ein Ausdruck ist eine gute Ergänzung zum Papierordner. Achtung: Auf Papier ist nichts verschlüsselt. Bewahren Sie den Ausdruck sicher auf.'),
       h('label',{for:'wp',style:'color:var(--ink);display:flex;align-items:center'},withPw,'Passwörter und PINs mitdrucken'),
       h('div',{class:'row'},h('button',{onclick:()=>printAll(withPw.checked)},'🖨 Gesamten Ordner drucken'),h('button',{onclick:printSheet},'🖨 Notfallblatt drucken'))),
-    h('section',{class:'card stack'},h('h2',null,'Passwort ändern'),
+    !S.ro&&h('section',{class:'card stack'},h('h2',null,'Passwort ändern'),
       h('div',{class:'grid'},h('div',null,h('label',null,'Neues Passwort (mind. 10 Zeichen)'),np1),h('div',null,h('label',null,'Wiederholen'),np2)),perr,
       h('div',null,h('button',{onclick:async()=>{perr.innerHTML='';
         if(np1.value.length<10)return perr.append(h('div',{class:'errbox'},'Mindestens 10 Zeichen.'));
@@ -872,7 +891,8 @@ function viewBackup(m){
         S.salt=rnd(16);S.key=await deriveKey(np1.value,S.salt);await persist();
         store.upsertIndex({id:S.id,lastBackup:null});
         alert('Das Passwort wurde geändert.\n\nBitte jetzt:\n1. Den Zettel im Notfall-Umschlag erneuern.\n2. Eine neue Sicherungsdatei speichern. Alte Sicherungen lassen sich nur noch mit dem alten Passwort öffnen.');renderApp();}},'Passwort ändern'))),
-    !isCouple()&&(()=>{const pn2=h('input',{type:'text',placeholder:'z. B. Erika Musterfrau'});return h('section',{class:'card stack'},h('h2',null,'👫 Partner oder Partnerin hinzufügen'),
+    S.ro&&h('section',{class:'card stack'},h('h2',null,'📖 Diese Lesekopie zum Hauptgerät machen'),h('p',null,'Nur nötig, wenn das bisherige Hauptgerät nicht mehr genutzt wird, zum Beispiel weil es verloren oder defekt ist. Danach kann hier wieder bearbeitet werden.'),h('div',null,h('button',{onclick:()=>{if(!confirm('Soll ab jetzt auf diesem Gerät bearbeitet werden?\n\nBitte nur, wenn das alte Hauptgerät nicht mehr benutzt wird.'))return;store.upsertIndex({id:S.id,role:'haupt'});S.ro=false;renderApp();}},'Zum Hauptgerät machen'))),
+    !S.ro&&!isCouple()&&(()=>{const pn2=h('input',{type:'text',placeholder:'z. B. Erika Musterfrau'});return h('section',{class:'card stack'},h('h2',null,'👫 Partner oder Partnerin hinzufügen'),
       h('p',null,'Dann wird dies ein gemeinsamer Ordner für Sie beide, mit einem Passwort. Persönliches wie Vollmachten, Gesundheit und Wünsche wird für jeden getrennt erfasst, Gemeinsames wie Kinder, Wohnung, Konten und Verträge nur einmal.'),
       h('div',null,h('label',null,'Name des Partners bzw. der Partnerin'),pn2),
       h('div',null,h('button',{class:'primary',onclick:()=>{const n=pn2.value.trim();if(!n)return alert('Bitte einen Namen eingeben.');
@@ -1110,7 +1130,7 @@ function ivShow(pages,i){
   shush();stopListen();
   i=Math.max(0,Math.min(i,pages.length-1));
   const p=pages[i];
-  if(S.data.iv.pos!==p.key){S.data.iv.pos=p.key;touch();}
+  if(S.data.iv.pos!==p.key){S.data.iv.pos=p.key;touch(true);}
   const pct=Math.round(i/Math.max(1,pages.length-1)*100);
   const plant=pct>=100?'🌸':pct>=75?'🌳':pct>=50?'🪴':pct>=25?'🌿':'🌱';
   const forP=isCouple()&&p.pid&&p.s&&stepPer(p.s);
@@ -1278,6 +1298,8 @@ function petals(){
 function ivMenu(){
   shush();stopListen();
   const card=ivFrame('Menü',0,'☰');
+  const ixm=store.index().find(x=>x.id===S.id)||{};
+  if(ixm.lastBackup&&S.data.meta.changed&&new Date(S.data.meta.changed)>new Date(ixm.lastBackup))card.append(h('div',{class:'iv-info',style:'margin-bottom:1rem'},'🔄 Seit der letzten Kopie hat sich etwas geändert. Tippen Sie auf „Sicherung speichern“ und schicken Sie die Datei an Ihre Angehörigen.'));
   card.append(h('div',{class:'iv-q'},'Was möchten Sie tun?'),h('div',{class:'iv-menu'},
     h('button',{class:'next',style:'background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700',onclick:()=>renderInterview()},'▶ Weiter mit den Fragen'),
     h('button',{onclick:()=>renderInterview('i:Willkommen')},'⏮ Von vorne beginnen'),
