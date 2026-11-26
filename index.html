@@ -216,7 +216,7 @@ details.more summary{cursor:pointer;color:var(--acc);font-weight:600}
    (PBKDF2-SHA-256, 600.000 Durchläufe).
    ============================================================ */
 
-const APP_VERSION = '0.3 (Testversion)';
+const APP_VERSION = '1.0';
 const IS_WEB = location.protocol==='http:'||location.protocol==='https:';
 const APP_URL = IS_WEB ? location.origin+location.pathname.replace(/index\.html$/,'') : null;
 const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
