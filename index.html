@@ -711,10 +711,10 @@ function viewHome(m){
   else if(ix.lastBackup&&S.data.meta.changed&&new Date(S.data.meta.changed)>new Date(ix.lastBackup))warns.push(h('div',{class:'warnbox'},'🔄 Seit der letzten Kopie hat sich etwas geändert. Schicken Sie Ihrem Partner bzw. Ihren Angehörigen eine neue Kopie, damit ihre Lesekopie aktuell ist. ',h('button',{class:'link',onclick:exportFile},'Neue Kopie verschicken')));
   else if(!ix.lastBackup)warns.push(h('div',{class:'warnbox'},'💾 Sie haben noch keine Sicherungsdatei erstellt. Wenn der Browser-Speicher gelöscht wird, sind die Daten sonst weg. ',h('button',{class:'link',onclick:()=>go('sicherung')},'Jetzt sichern')));
   else if(Date.now()-new Date(ix.lastBackup)>90*864e5)warns.push(h('div',{class:'warnbox'},'💾 Die letzte Sicherung ist älter als drei Monate ('+fmtDate(ix.lastBackup)+'). ',h('button',{class:'link',onclick:()=>go('sicherung')},'Neu sichern')));
-  if(!(S.data.s.notfall.zugriff||[]).some(p=>p.name))warns.push(h('div',{class:'warnbox'},'🔑 Tragen Sie ein, wer im Ernstfall Zugriff hat, und drucken Sie das Notfallblatt. ',h('button',{class:'link',onclick:()=>go('sec:notfall')},'Zum Notfallzugang')));
+  if(!S.ro&&!(S.data.s.notfall.zugriff||[]).some(p=>p.name))warns.push(h('div',{class:'warnbox'},'🔑 Tragen Sie ein, wer im Ernstfall Zugriff hat, und drucken Sie das Notfallblatt. ',h('button',{class:'link',onclick:()=>go('sec:notfall')},'Zum Notfallzugang')));
   add(m,
     h('h1',null,'Übersicht'),
-    h('p',{class:'muted'},'Füllen Sie die Bereiche nach und nach aus. Alles wird automatisch verschlüsselt gespeichert. Leere Felder sind kein Problem.'),
+    h('p',{class:'muted'},S.ro?'Hier können Sie alle Angaben nachlesen. Im Ernstfall tippen Sie auf den roten Knopf.':'Füllen Sie die Bereiche nach und nach aus. Alles wird automatisch verschlüsselt gespeichert. Leere Felder sind kein Problem.'),
     ...warns,
     h('button',{class:'primary big',style:'margin-bottom:1.2rem;background:#b8432f;border-color:#b8432f',onclick:()=>go('ernstfall')},'⚠️ Im Ernstfall: Was ist jetzt zu tun?'),
     h('div',{class:'tiles'},SCHEMA.map(sec=>{const p=progress(sec);return h('button',{class:'tile',onclick:()=>go('sec:'+sec.id)},
